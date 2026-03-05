@@ -1,101 +1,73 @@
-import Image from "next/image";
+"use client"
+
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { motion } from "framer-motion"
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Background Gradients */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-900/20 blur-[120px] rounded-full point-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-900/20 blur-[120px] rounded-full point-events-none" />
+      <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-emerald-900/10 blur-[100px] rounded-full point-events-none" />
+
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="max-w-3xl space-y-8 relative z-10"
+      >
+        <div className="inline-flex items-center rounded-full border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm px-3 py-1 text-sm text-neutral-300 font-medium mb-4">
+          <span className="flex h-2 w-2 rounded-full bg-blue-500 mr-2 animate-pulse"></span>
+          Afterword Phase 1 is Live
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        <h1 className="text-5xl md:text-7xl font-bold tracking-tight bg-gradient-to-br from-white via-neutral-200 to-neutral-600 text-transparent bg-clip-text leading-tight pb-2">
+          A private time capsule <br className="hidden md:block" />
+          with a dead man's switch.
+        </h1>
+
+        <p className="text-xl text-neutral-400 max-w-2xl mx-auto leading-relaxed">
+          Your files and messages stay completely locked. They reach the right person only if you're truly gone — automatically, securely, and completely private.
+        </p>
+
+        <div className="pt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <Button size="lg" asChild className="h-14 px-8 text-base font-semibold bg-white text-black hover:bg-neutral-200 transition-colors rounded-full shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)]">
+            <Link href="/register">Create Your Vault</Link>
+          </Button>
+          <Button size="lg" variant="ghost" asChild className="h-14 px-8 text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-900 rounded-full transition-colors border border-neutral-800">
+            <Link href="/login">Sign In</Link>
+          </Button>
+        </div>
+
+        <div className="pt-24 grid grid-cols-1 md:grid-cols-3 gap-8 text-left max-w-4xl mx-auto border-t border-neutral-800/50 mt-12">
+          <div className="space-y-4">
+            <div className="h-10 w-10 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+            </div>
+            <h3 className="font-semibold text-lg text-neutral-200">Zero-Trust Security</h3>
+            <p className="text-sm text-neutral-500 leading-relaxed">Everything is encrypted before it leaves your device. We can never see your private files.</p>
+          </div>
+          <div className="space-y-4">
+            <div className="h-10 w-10 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+            </div>
+            <h3 className="font-semibold text-lg text-neutral-200">Automated Release</h3>
+            <p className="text-sm text-neutral-500 leading-relaxed">Set your check-in interval. If you miss it and the grace period expires, your trusted contacts are notified.</p>
+          </div>
+          <div className="space-y-4">
+            <div className="h-10 w-10 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></svg>
+            </div>
+            <h3 className="font-semibold text-lg text-neutral-200">Self-Sovereign</h3>
+            <p className="text-sm text-neutral-500 leading-relaxed">Fully open-source. Export your entire vault anytime, or self-host your own instance in minutes.</p>
+          </div>
+        </div>
+
+      </motion.div>
     </div>
-  );
+  )
 }
