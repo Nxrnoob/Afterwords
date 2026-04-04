@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -8,12 +8,20 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import Link from "next/link"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
+import { deriveKey, exportKey } from "@/lib/client-encryption"
+import { KeyRound } from "lucide-react"
 
 export default function LoginPage() {
     const router = useRouter()
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
+    const [savedSecretKey, setSavedSecretKey] = useState<string | null>("loading")
+
+    useEffect(() => {
+        const key = localStorage.getItem("afterword_secret_key")
+        setSavedSecretKey(key)
+    }, [])
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -23,6 +31,15 @@ export default function LoginPage() {
         const formData = new FormData(e.currentTarget)
         const email = formData.get("email") as string
         const password = formData.get("password") as string
+        const manualSecretKey = formData.get("secretKey") as string | null
+
+        const finalSecretKey = savedSecretKey && savedSecretKey !== "loading" ? savedSecretKey : manualSecretKey
+
+        if (!finalSecretKey) {
+            setError("Secret Key is required for new devices.")
+            setLoading(false)
+            return
+        }
 
         try {
             const result = await signIn("credentials", {
@@ -35,6 +52,17 @@ export default function LoginPage() {
                 setError("Invalid email or password.")
                 setLoading(false)
             } else if (result?.ok) {
+                try {
+                    const key = await deriveKey(password, finalSecretKey);
+                    const exportedKey = await exportKey(key);
+                    sessionStorage.setItem("afterword_vault_key", exportedKey);
+                    
+                    if (manualSecretKey) {
+                        localStorage.setItem("afterword_secret_key", manualSecretKey)
+                    }
+                } catch (err) {
+                    console.error("Failed to derive local encryption key", err);
+                }
                 router.push("/dashboard")
                 router.refresh()
             }
@@ -42,6 +70,10 @@ export default function LoginPage() {
             setError("Something went wrong.")
             setLoading(false)
         }
+    }
+
+    if (savedSecretKey === "loading") {
+        return <div className="min-h-screen bg-black" /> // Prevent hydration flash
     }
 
     return (
@@ -84,6 +116,30 @@ export default function LoginPage() {
                                     required
                                 />
                             </div>
+                            
+                            <AnimatePresence>
+                                {!savedSecretKey && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: "auto" }}
+                                        className="space-y-2 overflow-hidden"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <KeyRound className="w-4 h-4 text-emerald-500" />
+                                            <Label htmlFor="secretKey" className="text-emerald-500 font-medium">Secret Key (New Device)</Label>
+                                        </div>
+                                        <Input
+                                            id="secretKey"
+                                            name="secretKey"
+                                            type="text"
+                                            placeholder="XXXX-XXXX-XXXX-XXXX"
+                                            className="bg-emerald-950/20 border-emerald-900/50 focus-visible:ring-emerald-700 text-emerald-400 font-mono placeholder:text-emerald-900/50 transition-colors"
+                                            required
+                                        />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
                             {error && (
                                 <motion.div
                                     initial={{ opacity: 0, y: -10 }}

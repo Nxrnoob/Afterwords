@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { decryptString } from "@/lib/encryption"
 import { Lock, FileText, Key, Calendar } from "lucide-react"
+import { RecipientDecrypter } from "@/components/RecipientDecrypter"
 
 export default async function RecipientAccessPage({
     params
@@ -34,16 +35,19 @@ export default async function RecipientAccessPage({
     }
 
     // 3. Decrypt payload
+    let isClientEncrypted = releaseToken.vaultItem.encryptedContent.startsWith("CLIENT_ENCRYPTED:")
     let decryptedContent = "Error decrypting content."
     let structuredData: any = null
 
-    try {
-        decryptedContent = decryptString(releaseToken.vaultItem.encryptedContent)
-        if (releaseToken.vaultItem.itemType === "credential" || releaseToken.vaultItem.itemType === "file") {
-            structuredData = JSON.parse(decryptedContent)
+    if (!isClientEncrypted) {
+        try {
+            decryptedContent = decryptString(releaseToken.vaultItem.encryptedContent)
+            if (releaseToken.vaultItem.itemType === "credential" || releaseToken.vaultItem.itemType === "file") {
+                structuredData = JSON.parse(decryptedContent)
+            }
+        } catch (e) {
+            console.error("Failed to decrypt recipient payload", e)
         }
-    } catch (e) {
-        console.error("Failed to decrypt recipient payload", e)
     }
 
     return (
@@ -70,7 +74,7 @@ export default async function RecipientAccessPage({
                                 {releaseToken.vaultItem.title}
                             </CardTitle>
                             <span className="text-xs font-medium px-2.5 py-1 bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20">
-                                Verified Intact
+                                {isClientEncrypted ? "Zero-Knowledge" : "Verified Intact"}
                             </span>
                         </div>
                         <CardDescription className="text-neutral-500 flex items-center gap-2 mt-2">
@@ -79,7 +83,9 @@ export default async function RecipientAccessPage({
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="pt-6">
-                        {releaseToken.vaultItem.itemType === "credential" && structuredData ? (
+                        {isClientEncrypted ? (
+                            <RecipientDecrypter ciphertext={releaseToken.vaultItem.encryptedContent} itemType={releaseToken.vaultItem.itemType} />
+                        ) : releaseToken.vaultItem.itemType === "credential" && structuredData ? (
                             <div className="space-y-4">
                                 <div className="p-4 bg-neutral-950/50 border border-neutral-800 rounded-lg space-y-3">
                                     <div>

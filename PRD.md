@@ -148,6 +148,12 @@ Their business is them. Has client lists, credentials, access to shared
 tools. Needs their partner or co-founder to pick things up immediately
 if they\'re gone. Willing to pay for reliability.
 
+**The Web3 / Crypto Native**
+
+Holds self-custody assets (seed phrases, wallets). Cannot rely on standard
+legal channels for inheritance. Needs a mathematically proven, trustless
+system to pass on assets and sensitive data without centralized failure points.
+
 **5. Tech Stack**
 
 Selected specifically for AI-assisted (vibe-coded) development --- large
@@ -275,12 +281,13 @@ ecosystem.
 
   SMS check-in         Reply YES to SMS to check  4
                        in                         
+
+  Web3 Vault Mode      Optional: Encrypt via Lit  4
+  (Trustless)          Protocol and store on IPFS 
+                       for true decentralization  
   -------------------- -------------------------- --------------------------
 
 **6.2 Intentionally Excluded**
-
--   **Theater, not trust. Tamper-evident DB log is sufficient.**
-    Blockchain / transaction IDs
 
 -   **We are not a legal service. Don\'t pretend.** Legal will templates
 
@@ -306,6 +313,10 @@ ecosystem.
   Phase 2            The Real Product           Mobile PWA, recipient
                                                 experience, multiple
                                                 recipients, voice
+
+  Phase 2.5          Product Polish & UI/UX     Secret Key security model,
+                                                animations, bento grids,
+                                                drag-and-drop, onboarding
 
   Phase 3            The Open Platform          Self-hosting, Docker,
                                                 advanced release options,
@@ -477,8 +488,13 @@ System decrypts vault items and:
 
 -   Files encrypted with the same derived key before storage
 
--   Phase 2 migration: move to full client-side (TweetNaCl) with key
-    wrapping
+-   Phase 2 migration: move to full client-side (TweetNaCl/WebCrypto) with key wrapping in browser
+
+-   **Phase 2.5 (Secret Key Model)**: To prevent unauthorized decryption if a password is stolen, derive the Master Key using **Password + a Random 128-bit Secret Key**. The Secret Key is generated locally on signup, never sent to the server, and must be entered when logging into a new device.
+
+-   Phase 4 expansion: Introduce **Web3 Mode**. Users can opt to encrypt
+    items using decentralized access control (e.g., Lit Protocol) and 
+    store blobs on decentralized storage (IPFS/Arweave) bypassing our DB entirely.
 
 **8.5 API Routes**
 
@@ -657,6 +673,18 @@ Brief scope below.
 
 -   Mobile-optimized check-in notification (tap from lock screen)
 
+**Phase 2.5 --- Product Polish & UI/UX Overhaul**
+
+-   **Secret Key (1Password Model)**: Generate a 128-bit Recovery Phrase on signup. The Master Key is derived from Password + Secret Key. Requires the Secret Key to log in on new devices. A beautiful PDF is generated for the user to print and store in a safe.
+-   **Floating Mobile Dock**: A native-feeling iOS-like bottom navigation dock for the PWA containing Home, Add, Beneficiaries, and Settings.
+-   **Local App Lock**: Require a 4-digit PIN or Biometric (FaceID/Fingerprint via WebAuthn) check to unblur the app when waking from sleep/background on mobile.
+-   **Beneficiaries Hub**: A dedicated management screen giving an overview of 'Who gets what' by contact, plus a Global Cover Letter.
+-   **Folders & Tags**: Expand the flat item structure into custom user folders.
+-   **Security Center & Audit Log**: A dedicated screen to view active login sessions, verify the Secret Key, and view a visual timeline of all account activity.
+-   **Dashboard Transformation**: Bento-box or masonry grid layout for vault items. Real-time search, filtering, and rich empty states.
+-   **Animations & Micro-interactions**: Smooth page transitions using Framer Motion, skeleton loaders, and satisfying success states (e.g., a "Heartbeat" ripple animation when checking in).
+-   **File Drag-and-Drop**: A seamless drag-and-drop zone for uploading secure files.
+
 **Phase 3 --- The Open Platform**
 
 -   Docker Compose self-host with full documentation
@@ -680,6 +708,8 @@ Brief scope below.
 -   SMS check-in via Twilio (with email fallback)
 
 -   Passphrase-locked vault within vault
+
+-   **Web3 / Trustless Vault Mode** (IPFS Storage + Smart Contract / Lit Protocol conditions)
 
 -   Rate limiting, brute-force protection, CSRF hardening
 
