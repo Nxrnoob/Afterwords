@@ -1,87 +1,160 @@
-# Afterword - Ultimate Digital Legacy Vault
+# Afterword — Secure Digital Legacy Vault
 
-Afterword is a secure, end-to-end digital legacy vault that allows you to store your most sensitive information (notes, credentials, and files) and ensure they are automatically released to trusted recipients if you go inactive.
+Afterword is a **client-side encrypted digital legacy vault**. Store your most sensitive data — notes, credentials, files, letters — and ensure it is automatically released to your trusted beneficiaries if you go inactive.
 
-## Phase 1 Features
-- **Secure Vault:** AES-256-GCM encryption on the server to securely store Notes, Credentials, and Files (~4MB embedded payloads).
-- **Authentication:** Passwordless authentication via Magic Links or GitHub OAuth (NextAuth.js).
-- **Dead Man's Switch:** Automatic grace period activation upon missing check-ins. If the grace period expires, emails containing secure access links are fired to recipients.
-- **Recipient Access:** One-time restricted viewing portal for trusted recipients with automatic token expiration.
-- **Exporting:** Download your entire vault at any time as an organized ZIP file.
+---
+
+## ✨ Features
+
+### Core Vault
+- **Client-Side Encryption** — All vault items are encrypted/decrypted entirely in the browser using the WebCrypto API + your personal Secret Key. The server never sees plaintext.
+- **Multiple Item Types** — Notes, Credentials, Files (with S3/local storage support), and rich text Documents.
+- **Vault Export** — Download your entire vault as an organized ZIP at any time.
+
+### Dead Man's Switch
+- **Automatic Check-In Monitoring** — A configurable interval (30 / 60 / 90 days) monitors whether you're still active.
+- **Grace Period** — After missing a check-in, a grace period activates. Two escalating warning emails are sent before the vault is released.
+- **Scheduled Release** — Optionally set a fixed future date to trigger release automatically, regardless of check-ins.
+- **Emergency Pause** — Instantly suspend the switch from the Settings page with no emails fired.
+
+### Beneficiaries Hub
+- **Contact Profiles** — Manage trusted people as named Contact profiles (name, email, phone, trusted flag).
+- **Item-Level Assignment** — Each vault item can be assigned to specific contacts via a many-to-many relationship (new in Phase 3). Not every recipient sees every item.
+- **Global Cover Letter** — Write an encrypted personal message shown to all beneficiaries when the vault unlocks.
+
+### Activity Audit Log
+- **Real-Time Timeline** — Every check-in, vault item creation, beneficiary addition, and grace period trigger is logged and displayed in chronological order with relative timestamps.
+
+### Security Center
+- **Secret Key** — A locally generated 128-bit key required for new device logins. Download as an Emergency PDF.
+- **App Lock** — Optional PIN lock that triggers when the PWA resumes from background.
+- **Active Sessions** — View and manage connected device sessions.
+
+### User Settings
+- **Dead Man's Switch Config** — Interval, trusted contact, scheduled release date, timezone, pause toggle.
+- **Change Password** — Securely update your login password (validates current password with bcrypt).
+- **Delete Account** — Permanently deletes your account and all data with a two-step typed confirmation.
+
+### Emails (Resend / SMTP)
+- **Welcome Email** — Sent automatically on account creation.
+- **Check-In Reminders** — Warning emails fired when the grace period activates and escalates.
+- **Vault Release Emails** — Sent to all assigned beneficiaries when the dead man's switch triggers.
+
+---
 
 ## Tech Stack
-- **Framework:** Next.js 14 (App Router)
-- **Database:** Prisma with PostgreSQL or SQLite (default local)
-- **Authentication:** Auth.js (NextAuth v5)
-- **Cryptography:** Node `crypto` module (AES-256-GCM)
-- **Design:** Tailwind CSS, Framer Motion, Radix UI (shadcn), Sonner (Toasts)
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 14 (App Router) |
+| Database | Prisma ORM + SQLite (default) / PostgreSQL |
+| Authentication | Auth.js (NextAuth v5) |
+| Encryption | WebCrypto API (client-side) + AES-256-GCM |
+| Email | Resend SDK / Nodemailer (SMTP fallback) |
+| UI | Tailwind CSS, Framer Motion, shadcn/ui, Sonner |
+| PWA | `next-pwa` |
 
 ---
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18.17 or later
-- npm, yarn, or pnpm
+- Node.js 18.17+
+- pnpm (recommended) or npm
 
 ### 1. Clone & Install
 ```bash
 git clone https://github.com/your-repo/afterword.git
 cd afterword
-npm install
+pnpm install
 ```
 
 ### 2. Environment Variables
-Create a `.env` file in the root directory based on the following template. By default, Prisma is configured for SQLite for easy local setup.
+Create a `.env` file in the root directory:
 
 ```env
-# Define the local database connection
+# SQLite for local dev (default)
 DATABASE_URL="file:./dev.db"
 
-# NextAuth Configuration
-# Run `npx auth secret` to generate a random 32-character secret
+# NextAuth — generate with: npx auth secret
 AUTH_SECRET="your_nextauth_secret"
 
-# Resend API Key for magic links and notification emails
-# (Optional for local if using terminal logging, but required for production emails)
-RESEND_API_KEY="re_..."
+# Email — choose one:
+RESEND_API_KEY="re_..."          # Resend (preferred for production)
+RESEND_FROM="Afterword <noreply@yourdomain.com>"
 
-# Core Encryption Key
-# MUST BE EXACTLY 32 CHARACTERS (e.g., 256 bits). NEVER LOSE THIS!
-# If this changes, existing vault items CANNOT be decrypted.
+# SMTP alternative (optional)
+# SMTP_HOST="smtp.example.com"
+# SMTP_PORT="587"
+# SMTP_USER="user@example.com"
+# SMTP_PASSWORD="yourpassword"
+# SMTP_FROM="Afterword <noreply@example.com>"
+
+# Server-side fallback encryption key (32 chars)
+# NOTE: Primary encryption is client-side via WebCrypto.
 ENCRYPTION_KEY="your-32-character-ultra-secure-key"
 ```
 
-### 3. Database Migration
-Run the Prisma migrations to initialize the database schema.
+> **Important:** If neither `RESEND_API_KEY` nor SMTP is configured, email actions will be simulated in the console — useful for local development.
+
+### 3. Initialize Database
 ```bash
-npx prisma migrate dev --name init
+npx prisma db push    # apply schema (dev)
+npx prisma generate   # regenerate Prisma client
 ```
 
 ### 4. Run Development Server
-Start the Next.js local development server.
 ```bash
-npm run dev
+pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## Security Model (Phase 1)
-Currently, Afterword uses Server-Side encryption. When you add a new Vault Item (Note, File, or Credential), the data is transmitted over HTTPS to the server. The `ENCRYPTION_KEY` environment variable is then utilized to encrypt the payload via `AES-256-GCM` before sending it to the database.
+## Security Model
 
-Only your Afterword server has the decryption key. This ensures data is completely unreadable at rest within your database platform.
+Afterword uses a **dual-layer encryption architecture**:
+
+1. **Client-Side (Primary):** Vault contents are encrypted in the browser using the WebCrypto API + a user-held Secret Key before being sent to the server. The server stores only ciphertext.
+
+2. **Server-Side (Fallback/Transport):** The `ENCRYPTION_KEY` env variable provides AES-256-GCM encryption at the server boundary for non-secret fields and transport security.
+
+Only the user (via their Secret Key) can decrypt stored vault payloads. Even if the database is compromised, vault contents remain unreadable.
+
+---
+
+## Database Schema (Key Models)
+
+```
+User → VaultItem → VaultItemContact (M:N) → Contact
+User → CheckinEvent
+User → GracePeriod
+User → AuditLog
+User → Folder → VaultItem
+VaultItem → ReleaseToken (for recipient access)
+```
 
 ---
 
 ## Scripts
-- `npm run dev`: Starts the Next.js development server
-- `npm run build`: Builds the app for production deployment
-- `npm start`: Runs the production build
-- `npm run lint`: Formats and lints code structure
 
-## Future Roadmap (Phase 2 & 3)
-- Fully Client-Side Encryption Implementation using WebCrypto API
-- Progressive Web App (PWA) Offline Support
-- Physical Storage Integrity Logging 
+```bash
+pnpm dev          # Start development server
+pnpm build        # Production build
+pnpm start        # Run production server
+pnpm lint         # Lint & format
+
+npx prisma studio # Browse database in browser
+npx prisma db push # Sync schema to database
+```
+
+---
+
+## Roadmap
+
+- [ ] UI for item-level contact assignment in AddItemSheet
+- [ ] Skeleton loaders for all loading states
+- [ ] SVG empty-state illustrations
+- [ ] Folder-based bento grid dashboard layout
+- [ ] Drag-and-drop multi-file uploads

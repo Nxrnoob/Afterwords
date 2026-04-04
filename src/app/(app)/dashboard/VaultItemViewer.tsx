@@ -6,12 +6,16 @@ import { getDecryptedVaultItem } from "@/app/actions/vault"
 import { FileText, Key, Loader2, Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { decryptData, importKey } from "@/lib/client-encryption"
 
 type DecryptedItem = {
     id: string
     title: string
     itemType: string
     recipientEmail: string
+    storageProvider?: string
+    clientEncrypted?: boolean
+    rawCiphertext?: string
     decryptedContent?: string | null
     credentials?: {
         username?: string,
@@ -34,7 +38,32 @@ export default function VaultItemViewer({ items }: { items: any[] }) {
         try {
             const res = await getDecryptedVaultItem(item.id)
             if (res.success && res.item) {
-                setSelectedItem(res.item)
+                let displayItem: any = { ...res.item }
+
+                if (displayItem.clientEncrypted && displayItem.rawCiphertext) {
+                    const b64Key = sessionStorage.getItem("afterword_vault_key")
+                    if (!b64Key) {
+                        toast.error("Local encryption key missing. Please log out and back in.")
+                        setLoadingId(null)
+                        return
+                    }
+                    try {
+                        const key = await importKey(b64Key)
+                        const dec = await decryptData(displayItem.rawCiphertext, key)
+                        
+                        if (displayItem.itemType === 'credential' || displayItem.itemType === 'file') {
+                            displayItem.credentials = JSON.parse(dec)
+                        } else {
+                            displayItem.decryptedContent = dec
+                        }
+                    } catch (decErr) {
+                        toast.error("Failed to decrypt locally. Key error.")
+                        setLoadingId(null)
+                        return
+                    }
+                }
+
+                setSelectedItem(displayItem)
                 setShowPassword(false)
                 setIsOpen(true)
             } else {
@@ -67,7 +96,14 @@ export default function VaultItemViewer({ items }: { items: any[] }) {
                                 </div>
                                 <div>
                                     <h3 className="font-medium text-neutral-200 group-hover:text-white transition-colors">{item.title}</h3>
-                                    <p className="text-xs text-neutral-500 mt-0.5 truncate max-w-[150px]">To: {item.recipientEmail}</p>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <p className="text-xs text-neutral-500 truncate max-w-[150px]">To: {item.recipientEmail}</p>
+                                        {item.storageProvider === "IPFS" && (
+                                            <span className="text-[10px] font-bold px-1.5 py-0.5 bg-emerald-900/30 text-emerald-500 rounded-sm border border-emerald-900/50">
+                                                IPFS
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                             {loadingId === item.id ? (
@@ -86,6 +122,11 @@ export default function VaultItemViewer({ items }: { items: any[] }) {
                         <DialogTitle className="flex items-center gap-2 text-xl">
                             {selectedItem?.itemType === 'credential' ? <Key className="w-5 h-5 text-neutral-400" /> : <FileText className="w-5 h-5 text-neutral-400" />}
                             {selectedItem?.title}
+                            {selectedItem?.storageProvider === "IPFS" && (
+                                <span className="text-xs font-bold px-2 py-0.5 bg-emerald-900/40 text-emerald-400 rounded-full border border-emerald-900/50 ml-1">
+                                    Web3
+                                </span>
+                            )}
                         </DialogTitle>
                         <DialogDescription className="text-neutral-400">
                             Addressed to: {selectedItem?.recipientEmail}

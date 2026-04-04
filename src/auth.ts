@@ -46,5 +46,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             }
             return token;
         }
+    },
+    events: {
+        async signIn({ user }) {
+            if (user?.id) {
+                try {
+                    await prisma.auditLog.create({
+                        data: {
+                            action: 'LOGIN',
+                            userId: user.id,
+                            entityType: 'User',
+                            entityId: user.id,
+                        }
+                    });
+                    
+                    await prisma.user.update({
+                        where: { id: user.id },
+                        data: { lastCheckinAt: new Date() }
+                    });
+                } catch (error) {
+                    console.error("Failed to log sign-in event:", error);
+                }
+            }
+        }
     }
 })

@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,73 +8,79 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
+  id            String         @id @default(cuid())
+  email         String         @unique
   passwordHash  String
   emailVerified DateTime?
-  createdAt     DateTime  @default(now())
-  lastCheckinAt DateTime  @default(now())
-
-  settings      VaultSetting?
-  items         VaultItem[]
+  createdAt     DateTime       @default(now())
+  lastCheckinAt DateTime       @default(now())
+  AuditLog      AuditLog[]
   checkins      CheckinEvent[]
+  Contact       Contact[]
+  CoverLetter   CoverLetter?
+  Folder        Folder[]
   gracePeriods  GracePeriod[]
+  items         VaultItem[]
+  settings      VaultSetting?
 }
 
 model VaultSetting {
-  id                  String   @id @default(cuid())
-  userId              String   @unique
-  checkinIntervalDays Int      @default(30)
-  gracePeriodDays     Int      @default(14)
-  trustedContactEmail String?
-  
-  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  checkinIntervalDays  Int       @default(30)
+  gracePeriodDays      Int       @default(14)
+  trustedContactEmail  String?
+  scheduledReleaseDate DateTime?
+  timezone             String    @default("UTC")
+  isPaused             Boolean   @default(false)
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VaultItem {
-  id               String   @id @default(cuid())
+  id               String             @id @default(cuid())
   userId           String
-  itemType         String   // note, file, credential
+  itemType         String
   title            String
   encryptedContent String
-  recipientEmail   String
-  createdAt        DateTime @default(now())
-
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipientEmail   String?
+  folderId         String?
+  storageProvider  String             @default("DATABASE")
+  createdAt        DateTime           @default(now())
   files            File[]
+  Recipient        Recipient[]
   releaseTokens    ReleaseToken[]
+  VaultItemContact VaultItemContact[]
+  Folder           Folder?            @relation(fields: [folderId], references: [id])
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model File {
-  id           String    @id @default(cuid())
-  vaultItemId  String
-  storageKey   String
-  fileName     String
-  fileSize     Int
-  mimeType     String
-
-  vaultItem    VaultItem @relation(fields: [vaultItemId], references: [id], onDelete: Cascade)
+  id          String    @id @default(cuid())
+  vaultItemId String
+  storageKey  String
+  fileName    String
+  fileSize    Int
+  mimeType    String
+  vaultItem   VaultItem @relation(fields: [vaultItemId], references: [id], onDelete: Cascade)
 }
 
 model CheckinEvent {
-  id           String   @id @default(cuid())
-  userId       String
-  checkedInAt  DateTime @default(now())
-  method       String   // email_link, dashboard, auto
-
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  userId      String
+  checkedInAt DateTime @default(now())
+  method      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model GracePeriod {
-  id               String   @id @default(cuid())
-  userId           String
-  startedAt        DateTime @default(now())
-  warning1SentAt   DateTime?
-  warning2SentAt   DateTime?
-  resolved         Boolean  @default(false)
-  resolvedAt       DateTime?
-
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String    @id @default(cuid())
+  userId         String
+  startedAt      DateTime  @default(now())
+  warning1SentAt DateTime?
+  warning2SentAt DateTime?
+  resolved       Boolean   @default(false)
+  resolvedAt     DateTime?
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ReleaseToken {
@@ -87,6 +90,68 @@ model ReleaseToken {
   token          String    @unique @default(uuid())
   expiresAt      DateTime
   accessedAt     DateTime?
-
   vaultItem      VaultItem @relation(fields: [vaultItemId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id         String   @id
+  userId     String?
+  action     String
+  entityId   String?
+  entityType String?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  User       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Contact {
+  id             String             @id
+  userId         String
+  name           String
+  email          String
+  phone          String?
+  isTrusted      Boolean            @default(false)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime
+  User           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  VaultItemContact VaultItemContact[]
+}
+
+/// Join table: which specific contacts can access a specific vault item
+model VaultItemContact {
+  id          String    @id @default(cuid())
+  vaultItemId String
+  contactId   String
+  assignedAt  DateTime  @default(now())
+  VaultItem   VaultItem @relation(fields: [vaultItemId], references: [id], onDelete: Cascade)
+  Contact     Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([vaultItemId, contactId])
+}
+
+model CoverLetter {
+  id               String   @id
+  userId           String   @unique
+  encryptedContent String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime
+  User             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Folder {
+  id        String      @id
+  userId    String
+  name      String
+  color     String?     @default("neutral")
+  createdAt DateTime    @default(now())
+  User      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  VaultItem VaultItem[]
+}
+
+model Recipient {
+  id          String    @id
+  email       String
+  vaultItemId String
+  VaultItem   VaultItem @relation(fields: [vaultItemId], references: [id], onDelete: Cascade)
 }
