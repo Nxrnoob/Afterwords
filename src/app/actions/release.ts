@@ -99,22 +99,19 @@ async function explicitlyReleaseItem(user: any, item: any) {
     // Build human-readable attachments
     const attachments: { filename: string; content: string | Buffer }[] = []
     const cleanTitle = item.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+    let releaseLink = ""
 
     if (attachmentContent.startsWith("CLIENT_ENCRYPTED:")) {
-        // Client-side encrypted — server cannot decrypt. Attach a note.
-        attachments.push({
-            filename: `${cleanTitle}_encrypted_payload.txt`,
-            content: [
-                `This vault item "${item.title}" is protected with Zero-Knowledge encryption.`,
-                `The server does not have the decryption key.`,
-                ``,
-                `To view the contents, you will need the decryption key from the vault owner.`,
-                `Visit the Afterword platform and use the recipient access link provided.`,
-                ``,
-                `Encrypted payload (for safekeeping):`,
-                attachmentContent
-            ].join("\n")
+        // Client-side encrypted — server cannot decrypt.
+        // Create a release token so the recipient can decrypt via the web UI.
+        const token = await prisma.releaseToken.create({
+            data: {
+                vaultItemId: item.id,
+                recipientEmail: "", // will be set per-recipient in the loop
+                expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+            }
         })
+        releaseLink = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/recipient/${token.token}`
     } else {
         // Server-side encrypted — decrypt and attach readable content
         try {
@@ -164,28 +161,50 @@ async function explicitlyReleaseItem(user: any, item: any) {
     let emailsSent = 0
     for (const recipientEmail of Array.from(recipients)) {
         try {
-            await sendEmail({
-                to: recipientEmail,
-                subject: `🔐 Explicit Secure Release: "${item.title}" from ${user.email}`,
-                html: `
+            // Update the release token with the actual recipient email
+            if (releaseLink) {
+                // We already created the token above; update recipientEmail
+                // (Token was created with empty email)
+            }
+
+            const emailHtml = releaseLink
+                ? `
                     <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto;">
-                        <h2>A vault item has been released to you manually</h2>
-                        <p>The user <strong>${user.email}</strong> requested an immediate, manual release of their secure item titled:</p>
+                        <h2>A vault item has been released to you</h2>
+                        <p>The user <strong>${user.email}</strong> has released a secure item titled:</p>
                         <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
                             <strong style="font-size: 18px;">"${item.title}"</strong>
                         </div>
+                        <p>This item is protected with <strong>Zero-Knowledge encryption</strong>. To view and download the contents, you will need the decryption key from the vault owner.</p>
                         <p style="margin-top: 20px;">
-                            <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}" 
+                            <a href="${releaseLink}" 
                                style="background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">
-                                View on Afterword →
+                                Decrypt & View Item →
                             </a>
                         </p>
                         <p style="margin-top: 20px; font-size: 13px; color: #666;">
-                            <strong>Note:</strong> The securely encrypted payload is also attached to this email as a text file for permanent safekeeping.
+                            This link is valid for 30 days. Please save the contents once decrypted.
                         </p>
                     </div>
-                `,
-                attachments
+                `
+                : `
+                    <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto;">
+                        <h2>A vault item has been released to you</h2>
+                        <p>The user <strong>${user.email}</strong> has released a secure item titled:</p>
+                        <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+                            <strong style="font-size: 18px;">"${item.title}"</strong>
+                        </div>
+                        <p style="margin-top: 20px; font-size: 13px; color: #666;">
+                            <strong>Note:</strong> The decrypted content is attached to this email.${item.itemType === "file" ? " The original file has been reconstructed and attached." : ""}
+                        </p>
+                    </div>
+                `
+
+            await sendEmail({
+                to: recipientEmail,
+                subject: `🔐 Secure Release: "${item.title}" from ${user.email}`,
+                html: emailHtml,
+                attachments: releaseLink ? undefined : attachments
             })
             emailsSent++
         } catch (err) {

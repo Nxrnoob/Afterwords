@@ -210,7 +210,9 @@ export async function POST(req: Request) {
 async function releaseVaultItems(user: {
     email: string
     items: Array<{
+        id: string
         title: string
+        itemType: string
         recipientEmail: string | null
         encryptedContent: string
         storageProvider: string
@@ -264,21 +266,18 @@ async function releaseVaultItems(user: {
         // Build human-readable attachments
         const attachments: { filename: string; content: string | Buffer }[] = []
         const cleanTitle = item.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+        let releaseLink = ""
 
         if (attachmentContent.startsWith("CLIENT_ENCRYPTED:")) {
-            attachments.push({
-                filename: `${cleanTitle}_encrypted_payload.txt`,
-                content: [
-                    `This vault item "${item.title}" is protected with Zero-Knowledge encryption.`,
-                    `The server does not have the decryption key.`,
-                    ``,
-                    `To view the contents, you will need the decryption key from the vault owner.`,
-                    `Visit the Afterword platform and use the recipient access link provided.`,
-                    ``,
-                    `Encrypted payload (for safekeeping):`,
-                    attachmentContent
-                ].join("\n")
+            // Create a release token for the recipient to decrypt via web UI
+            const token = await prisma.releaseToken.create({
+                data: {
+                    vaultItemId: item.id,
+                    recipientEmail: "",
+                    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                }
             })
+            releaseLink = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/recipient/${token.token}`
         } else {
             try {
                 const { decryptString } = await import("@/lib/encryption")
@@ -326,10 +325,29 @@ async function releaseVaultItems(user: {
         // Send to each recipient
         for (const recipientEmail of Array.from(recipients)) {
             try {
-                await sendEmail({
-                    to: recipientEmail,
-                    subject: `🔐 A Secure Vault Item has been released to you by ${user.email}`,
-                    html: `
+                const emailHtml = releaseLink
+                    ? `
+                        <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto;">
+                            <h2>A vault item has been released to you</h2>
+                            <p>The user <strong>${user.email}</strong> stored a secure item titled:</p>
+                            <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+                                <strong style="font-size: 18px;">"${item.title}"</strong>
+                            </div>
+                            <p>This item is protected with <strong>Zero-Knowledge encryption</strong>. To view and download the contents, you will need the decryption key from the vault owner.</p>
+                            <p style="margin-top: 20px;">
+                                <a href="${releaseLink}" 
+                                   style="background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                                    Decrypt & View Item →
+                                </a>
+                            </p>
+                            <p style="margin-top: 20px; font-size: 13px; color: #666;">
+                                This link is valid for 30 days. Please save the contents once decrypted.
+                            </p>
+                            <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+                            <p style="color: #999; font-size: 12px;">This is an automated message from Afterword.</p>
+                        </div>
+                    `
+                    : `
                         <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto;">
                             <h2>A vault item has been released to you</h2>
                             <p>The user <strong>${user.email}</strong> stored a secure item titled:</p>
@@ -337,20 +355,19 @@ async function releaseVaultItems(user: {
                                 <strong style="font-size: 18px;">"${item.title}"</strong>
                             </div>
                             <p>This item has been automatically released because the user did not check in within their configured interval.</p>
-                            <p style="margin-top: 20px;">
-                                <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}" 
-                                   style="background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">
-                                    View on Afterword →
-                                </a>
-                            </p>
                             <p style="margin-top: 20px; font-size: 13px; color: #666;">
-                                <strong>Note:</strong> The securely encrypted payload is also attached to this email as a text file for permanent safekeeping.
+                                <strong>Note:</strong> The decrypted content is attached to this email.${item.itemType === "file" ? " The original file has been reconstructed and attached." : ""}
                             </p>
                             <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
                             <p style="color: #999; font-size: 12px;">This is an automated message from Afterword.</p>
                         </div>
-                    `,
-                    attachments
+                    `
+
+                await sendEmail({
+                    to: recipientEmail,
+                    subject: `🔐 A Secure Vault Item has been released to you by ${user.email}`,
+                    html: emailHtml,
+                    attachments: releaseLink ? undefined : attachments
                 })
                 emailsSent++
                 console.log(`[VAULT RELEASE] Sent email to ${recipientEmail} for item "${item.title}"`)
