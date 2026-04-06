@@ -10,7 +10,7 @@ import { encryptData, importKey } from "@/lib/client-encryption"
 import { useEffect } from "react"
 import { getContacts } from "@/app/actions/contacts"
 
-export default function AddItemClientWrapper({ onSuccess }: { onSuccess?: () => void }) {
+export default function AddItemClientWrapper({ onSuccess, ipfsEnabled = false }: { onSuccess?: () => void; ipfsEnabled?: boolean }) {
     const [itemType, setItemType] = useState<"note" | "credential" | "file">("note")
     const [storageProvider, setStorageProvider] = useState<"DATABASE" | "IPFS">("DATABASE")
     const [loading, setLoading] = useState(false)
@@ -34,13 +34,17 @@ export default function AddItemClientWrapper({ onSuccess }: { onSuccess?: () => 
                     url: formData.get("url") as string || ""
                 })
             } else if (itemType === "file" && selectedFile) {
-                const arrayBuffer = await selectedFile.arrayBuffer()
-                const bytes = new Uint8Array(arrayBuffer);
-                let binary = '';
-                for (let i = 0; i < bytes.byteLength; i++) {
-                    binary += String.fromCharCode(bytes[i]);
-                }
-                const base64Data = window.btoa(binary);
+                const base64Data = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const dataUrl = e.target?.result as string;
+                        // dataUrl looks like "data:image/png;base64,iVBORw0KGgo..."
+                        const b64 = dataUrl.split(",")[1];
+                        resolve(b64);
+                    };
+                    reader.onerror = () => reject(new Error("Failed to read file"));
+                    reader.readAsDataURL(selectedFile);
+                });
 
                 serializedPayload = JSON.stringify({
                     filename: selectedFile.name,
@@ -123,9 +127,12 @@ export default function AddItemClientWrapper({ onSuccess }: { onSuccess?: () => 
                             <input type="radio" value="DATABASE" name="storageProvider" checked={storageProvider === "DATABASE"} onChange={() => setStorageProvider("DATABASE")} className="hidden" />
                             Database (Platform)
                         </label>
-                        <label className={`flex-1 flex cursor-pointer select-none items-center justify-center py-2 text-sm font-medium rounded-md transition-colors ${storageProvider === "IPFS" ? "bg-emerald-900/40 text-emerald-400 shadow-sm border border-emerald-900/50" : "text-neutral-400 hover:text-neutral-200"}`}>
-                            <input type="radio" value="IPFS" name="storageProvider" checked={storageProvider === "IPFS"} onChange={() => setStorageProvider("IPFS")} className="hidden" />
-                            Web3 (IPFS)
+                        <label
+                            className={`flex-1 flex select-none items-center justify-center py-2 text-sm font-medium rounded-md transition-colors gap-1.5 ${storageProvider === "IPFS" ? "bg-emerald-900/40 text-emerald-400 shadow-sm border border-emerald-900/50" : ipfsEnabled ? "text-neutral-400 hover:text-neutral-200 cursor-pointer" : "text-neutral-600 cursor-not-allowed opacity-50"}`}
+                            title={!ipfsEnabled ? "IPFS disabled — add PINATA_JWT to .env to enable" : undefined}
+                        >
+                            <input type="radio" value="IPFS" name="storageProvider" disabled={!ipfsEnabled} checked={storageProvider === "IPFS"} onChange={() => ipfsEnabled && setStorageProvider("IPFS")} className="hidden" />
+                            🌐 Web3 (IPFS){!ipfsEnabled && " — not configured"}
                         </label>
                     </div>
                     {storageProvider === "IPFS" && (

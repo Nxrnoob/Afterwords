@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { X, Plus, Lock, ArrowLeft } from "lucide-react"
 import AddItemClientWrapper from "@/app/(app)/dashboard/AddItemClientWrapper"
 
-export function AddItemSheet() {
+export function AddItemSheet({ ipfsEnabled = false }: { ipfsEnabled?: boolean }) {
     const [isOpen, setIsOpen] = useState(false)
 
     const vibrate = (ms = 30) => {
@@ -72,7 +72,7 @@ export function AddItemSheet() {
                             </p>
                             
                             <div className="bg-neutral-900/60 rounded-3xl border border-neutral-800 p-1">
-                                <AddItemClientWrapper onSuccess={handleClose} />
+                                <AddItemClientWrapper onSuccess={handleClose} ipfsEnabled={ipfsEnabled} />
                             </div>
                         </div>
                     </motion.div>

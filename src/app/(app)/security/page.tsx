@@ -97,44 +97,7 @@ export default function SecurityPage() {
                 </Card>
             </section>
 
-            {/* App Lock Section */}
-            <section>
-                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <Fingerprint className="w-5 h-5 text-neutral-400" /> Local Protection
-                </h2>
-                <Card className="bg-neutral-900/40 border-neutral-800 overflow-hidden">
-                    <CardContent className="p-0">
-                        <div className="flex items-center justify-between p-6">
-                            <div className="space-y-1 pr-6">
-                                <h3 className="font-medium text-white">Biometric / PIN App Lock</h3>
-                                <p className="text-sm text-neutral-400">
-                                    Require your device PIN to unlock the app when returning from the background.
-                                </p>
-                            </div>
-                            <Switch checked={appLockEnabled || pinSetupVisible} onCheckedChange={handleToggleLock} />
-                        </div>
-                        {pinSetupVisible && (
-                            <div className="p-6 bg-neutral-950/50 border-t border-neutral-800/50 space-y-4">
-                                <h4 className="text-sm font-medium text-white">Set 4-Digit PIN</h4>
-                                <div className="flex items-center gap-4">
-                                    <Input 
-                                        type="password"
-                                        maxLength={4}
-                                        placeholder="0000"
-                                        value={newPin}
-                                        onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
-                                        className="w-24 text-center tracking-widest bg-neutral-900 border-neutral-700 text-white"
-                                    />
-                                    <Button onClick={handleSavePin} className="bg-emerald-500 text-black hover:bg-emerald-400">
-                                        Enable Lock
-                                    </Button>
-                                </div>
-                                {pinError && <p className="text-sm text-red-400">{pinError}</p>}
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-            </section>
+
 
             {/* Active Sessions Section */}
             <section>

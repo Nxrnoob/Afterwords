@@ -2,10 +2,10 @@
 
 import { useState, useTransition } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { getDecryptedVaultItem } from "@/app/actions/vault"
+import { getDecryptedVaultItem, deleteVaultItem } from "@/app/actions/vault"
 import { updateItemSchedule } from "@/app/actions/item-schedule"
 import { forceReleaseItem } from "@/app/actions/release"
-import { FileText, Key, Loader2, Eye, EyeOff, Settings2, CalendarClock, CheckCircle2, Send } from "lucide-react"
+import { FileText, Key, Loader2, Eye, EyeOff, Settings2, CalendarClock, CheckCircle2, Send, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -42,6 +42,7 @@ export default function VaultItemViewer({ items }: { items: any[] }) {
     const [scheduleItem, setScheduleItem] = useState<any>(null)
     const [scheduleDate, setScheduleDate] = useState("")
     const [isPending, startTransition] = useTransition()
+    const [isDeleting, setIsDeleting] = useState(false)
 
     async function handleView(item: any) {
         setLoadingId(item.id)
@@ -66,8 +67,9 @@ export default function VaultItemViewer({ items }: { items: any[] }) {
                         } else {
                             displayItem.decryptedContent = dec
                         }
-                    } catch (decErr) {
-                        toast.error("Failed to decrypt locally. Key error.")
+                    } catch (decErr: any) {
+                        console.error("Local Decryption Error:", decErr)
+                        toast.error(`Local Decryption Error: ${decErr?.message || "Unknown error"}`)
                         setLoadingId(null)
                         return
                     }
@@ -136,6 +138,27 @@ export default function VaultItemViewer({ items }: { items: any[] }) {
         })
     }
 
+    async function handleDelete(e: React.MouseEvent) {
+        e.stopPropagation()
+        if (!selectedItem) return
+        if (!confirm("Are you sure you want to permanently delete this secure item? This action cannot be undone.")) return
+        
+        setIsDeleting(true)
+        try {
+            const res = await deleteVaultItem(selectedItem.id)
+            if (res.success) {
+                toast.success("Item permanently deleted")
+                setIsOpen(false)
+            } else {
+                toast.error("Failed to delete item")
+            }
+        } catch {
+            toast.error("An unexpected error occurred while deleting")
+        } finally {
+            setIsDeleting(false)
+        }
+    }
+
     return (
         <>
             <div className="grid sm:grid-cols-2 gap-4">
@@ -171,6 +194,18 @@ export default function VaultItemViewer({ items }: { items: any[] }) {
                                                 })}
                                             </span>
                                         )}
+                                        {item.blockchainTxHash && (
+                                            <a 
+                                                href={`https://amoy.polygonscan.com/tx/${item.blockchainTxHash}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="text-[10px] font-bold px-1.5 py-0.5 bg-blue-900/30 text-blue-400 rounded-sm border border-blue-900/50 flex items-center gap-0.5 hover:bg-blue-900/50 transition-colors"
+                                                title="View on-chain proof"
+                                            >
+                                                ⛓️ On-Chain
+                                            </a>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -197,14 +232,19 @@ export default function VaultItemViewer({ items }: { items: any[] }) {
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogContent className="bg-neutral-950 border-neutral-800 text-white sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-xl">
-                            {selectedItem?.itemType === 'credential' ? <Key className="w-5 h-5 text-neutral-400" /> : <FileText className="w-5 h-5 text-neutral-400" />}
-                            {selectedItem?.title}
-                            {selectedItem?.storageProvider === "IPFS" && (
-                                <span className="text-xs font-bold px-2 py-0.5 bg-emerald-900/40 text-emerald-400 rounded-full border border-emerald-900/50 ml-1">
-                                    Web3
-                                </span>
-                            )}
+                        <DialogTitle className="flex items-center gap-2 text-xl justify-between">
+                            <div className="flex items-center gap-2">
+                                {selectedItem?.itemType === 'credential' ? <Key className="w-5 h-5 text-neutral-400" /> : <FileText className="w-5 h-5 text-neutral-400" />}
+                                {selectedItem?.title}
+                                {selectedItem?.storageProvider === "IPFS" && (
+                                    <span className="text-xs font-bold px-2 py-0.5 bg-emerald-900/40 text-emerald-400 rounded-full border border-emerald-900/50 ml-1">
+                                        Web3
+                                    </span>
+                                )}
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={handleDelete} disabled={isDeleting} className="text-red-400 hover:text-red-300 hover:bg-red-950/30">
+                                {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                            </Button>
                         </DialogTitle>
                         <DialogDescription className="text-neutral-400">
                             Addressed to: {selectedItem?.recipientEmail}

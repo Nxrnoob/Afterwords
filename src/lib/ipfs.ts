@@ -3,7 +3,7 @@
  * Uses Pinata API if PINATA_JWT is present. Otherwise, it acts as a mock locally.
  */
 
-export async function uploadToIPFS(base64Data: string, filename: string = "SecureVaultItem"): Promise<string> {
+export async function uploadToIPFS(payload: string, filename: string = "SecureVaultItem"): Promise<string> {
     const jwt = process.env.PINATA_JWT;
     
     if (!jwt) {
@@ -14,9 +14,9 @@ export async function uploadToIPFS(base64Data: string, filename: string = "Secur
     }
 
     try {
-        // Convert base64 data to Blob
-        const blobRaw = Buffer.from(base64Data, 'base64');
-        const file = new Blob([blobRaw]);
+        // The payload is already a string (like "CLIENT_ENCRYPTED:...")
+        // We just upload the exact string as a text blob
+        const file = new Blob([payload], { type: 'text/plain' });
         
         const formData = new FormData();
         formData.append("file", file, filename);

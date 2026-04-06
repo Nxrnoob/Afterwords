@@ -46,6 +46,7 @@ model VaultItem {
   folderId         String?
   storageProvider      String             @default("DATABASE")
   scheduledReleaseDate DateTime?
+  blockchainTxHash     String?
   createdAt            DateTime           @default(now())
   files            File[]
   Recipient        Recipient[]
@@ -69,8 +70,9 @@ model CheckinEvent {
   id          String   @id @default(cuid())
   userId      String
   checkedInAt DateTime @default(now())
-  method      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  method          String
+  blockchainTxHash String?
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model GracePeriod {

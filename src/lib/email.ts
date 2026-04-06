@@ -4,9 +4,10 @@ export interface SendEmailOptions {
   to: string | string[];
   subject: string;
   html: string;
+  attachments?: { filename: string, content: string | Buffer }[];
 }
 
-export async function sendEmail({ to, subject, html }: SendEmailOptions) {
+export async function sendEmail({ to, subject, html, attachments }: SendEmailOptions) {
   const isSmtpEnabled = !!(process.env.SMTP_HOST && process.env.SMTP_USER);
 
   if (isSmtpEnabled) {
@@ -28,6 +29,7 @@ export async function sendEmail({ to, subject, html }: SendEmailOptions) {
       to: Array.isArray(to) ? to.join(', ') : to,
       subject,
       html,
+      attachments,
     });
 
     return { success: true, id: info.messageId };
@@ -38,6 +40,7 @@ export async function sendEmail({ to, subject, html }: SendEmailOptions) {
       to: Array.isArray(to) ? to : [to],
       subject,
       html,
+      attachments,
     });
 
     if (error) {

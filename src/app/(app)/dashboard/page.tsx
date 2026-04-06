@@ -55,7 +55,6 @@ export default async function DashboardPage() {
                         daysRemaining={Math.max(0, daysRemaining)}
                     />
                     <div className="flex items-center gap-3">
-                        <ReleaseAllButton />
                         <ExportVaultButton />
                         <Link href="/settings">
                             <Button variant="ghost" size="icon" className="text-neutral-400 hover:text-white hover:bg-neutral-900 transition-colors">
@@ -143,7 +142,7 @@ export default async function DashboardPage() {
             </div>
 
             {/* Render the Native FAB and Sheet flow */}
-            <AddItemSheet />
+            <AddItemSheet ipfsEnabled={!!process.env.PINATA_JWT} />
         </div>
     )
 }
