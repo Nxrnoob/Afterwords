@@ -40,14 +40,14 @@ export function ReleaseAllButton() {
             <AlertDialogTrigger asChild>
                 <Button variant="outline" className="text-red-400 border-red-900/30 bg-red-950/10 hover:bg-red-950/30 hover:text-red-300 transition-colors">
                     <Send className="w-4 h-4 mr-2" />
-                    Test Release All
+                    Release All
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent className="bg-neutral-950 border-neutral-800 text-white">
                 <AlertDialogHeader>
                     <AlertDialogTitle className="text-red-400">Explicitly Release Entire Vault?</AlertDialogTitle>
                     <AlertDialogDescription className="text-neutral-400">
-                        This action is intended for testing that your email recipients are correctly set up. It will completely bypass your check-in timers and scheduled dates, and IMMEDIATELY send an email to every beneficiary attached to every item in your vault.
+                        This action will strictly bypass your check-in timers and scheduled dates, and IMMEDIATELY send an email to every beneficiary attached to every item in your vault.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

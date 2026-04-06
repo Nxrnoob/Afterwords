@@ -82,6 +82,24 @@ async function explicitlyReleaseItem(user: any, item: any) {
         recipients.add(user.settings.trustedContactEmail)
     }
 
+    let attachmentContent = item.encryptedContent
+    if (item.storageProvider === "IPFS" && item.encryptedContent.startsWith("ipfs://")) {
+        const cid = item.encryptedContent.replace("ipfs://", "")
+        try {
+            const res = await fetch(`https://gateway.pinata.cloud/ipfs/${cid}`)
+            if (res.ok) {
+                attachmentContent = await res.text()
+            }
+        } catch (e) {
+            console.error("IPFS fetch failed during release:", e)
+        }
+    }
+
+    const attachments = [{
+        filename: `${item.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_secure_payload.txt`,
+        content: attachmentContent
+    }]
+
     let emailsSent = 0
     for (const recipientEmail of Array.from(recipients)) {
         try {
@@ -101,8 +119,12 @@ async function explicitlyReleaseItem(user: any, item: any) {
                                 View on Afterword →
                             </a>
                         </p>
+                        <p style="margin-top: 20px; font-size: 13px; color: #666;">
+                            <strong>Note:</strong> The securely encrypted payload is also attached to this email as a text file for permanent safekeeping.
+                        </p>
                     </div>
-                `
+                `,
+                attachments
             })
             emailsSent++
         } catch (err) {

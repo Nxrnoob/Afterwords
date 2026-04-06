@@ -212,6 +212,8 @@ async function releaseVaultItems(user: {
     items: Array<{
         title: string
         recipientEmail: string | null
+        encryptedContent: string
+        storageProvider: string
         VaultItemContact: Array<{ Contact: { email: string; name: string } }>
     }>
     Contact: Array<{ email: string; name: string }>
@@ -245,6 +247,25 @@ async function releaseVaultItems(user: {
             recipients.add(user.settings.trustedContactEmail)
         }
 
+        // Prepare Attachment Content
+        let attachmentContent = item.encryptedContent
+        if (item.storageProvider === "IPFS" && item.encryptedContent.startsWith("ipfs://")) {
+            const cid = item.encryptedContent.replace("ipfs://", "")
+            try {
+                const res = await fetch(`https://gateway.pinata.cloud/ipfs/${cid}`)
+                if (res.ok) {
+                    attachmentContent = await res.text()
+                }
+            } catch (e) {
+                console.error("IPFS fetch failed during global cron release:", e)
+            }
+        }
+    
+        const attachments = [{
+            filename: `${item.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_secure_payload.txt`,
+            content: attachmentContent
+        }]
+
         // Send to each recipient
         for (const recipientEmail of Array.from(recipients)) {
             try {
@@ -265,10 +286,14 @@ async function releaseVaultItems(user: {
                                     View on Afterword →
                                 </a>
                             </p>
+                            <p style="margin-top: 20px; font-size: 13px; color: #666;">
+                                <strong>Note:</strong> The securely encrypted payload is also attached to this email as a text file for permanent safekeeping.
+                            </p>
                             <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
                             <p style="color: #999; font-size: 12px;">This is an automated message from Afterword.</p>
                         </div>
-                    `
+                    `,
+                    attachments
                 })
                 emailsSent++
                 console.log(`[VAULT RELEASE] Sent email to ${recipientEmail} for item "${item.title}"`)

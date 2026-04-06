@@ -11,6 +11,7 @@ type ActivityEvent = {
     title: string
     description: string
     timestamp: Date
+    blockchainTxHash?: string | null
 }
 
 const iconMap = {
@@ -38,8 +39,8 @@ export default async function ActivityLogPage() {
     // Fetch real data from DB in parallel
     const [user, checkins, items, contacts, gracePeriods] = await Promise.all([
         prisma.user.findUnique({ where: { id: userId }, select: { createdAt: true } }),
-        prisma.checkinEvent.findMany({ where: { userId }, orderBy: { checkedInAt: "desc" }, take: 10 }),
-        prisma.vaultItem.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 10, select: { id: true, title: true, itemType: true, createdAt: true } }),
+        prisma.checkinEvent.findMany({ where: { userId }, orderBy: { checkedInAt: "desc" }, take: 10, select: { id: true, checkedInAt: true, method: true, blockchainTxHash: true } }),
+        prisma.vaultItem.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 10, select: { id: true, title: true, itemType: true, createdAt: true, blockchainTxHash: true } }),
         prisma.contact.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true, name: true, createdAt: true } }),
         prisma.gracePeriod.findMany({ where: { userId }, orderBy: { startedAt: "desc" }, take: 5 }),
     ])
@@ -53,6 +54,7 @@ export default async function ActivityLogPage() {
         title: "Checked In",
         description: `Dead man's switch timer reset via ${c.method}.`,
         timestamp: c.checkedInAt,
+        blockchainTxHash: c.blockchainTxHash,
     }))
 
     items.forEach(item => events.push({
@@ -61,6 +63,7 @@ export default async function ActivityLogPage() {
         title: `Added "${item.title}"`,
         description: `Vault item of type ${item.itemType} created and encrypted.`,
         timestamp: item.createdAt,
+        blockchainTxHash: item.blockchainTxHash,
     }))
 
     contacts.forEach(c => events.push({
@@ -129,9 +132,21 @@ export default async function ActivityLogPage() {
                                         <div className="flex-1 space-y-1 pt-2">
                                             <p className="font-medium text-white text-base">{event.title}</p>
                                             <p className="text-sm text-neutral-400">{event.description}</p>
-                                            <span className="text-xs font-mono text-neutral-500 block mt-1">
-                                                {formatDistanceToNow(event.timestamp, { addSuffix: true })}
-                                            </span>
+                                            <div className="flex items-center gap-3 mt-1">
+                                                <span className="text-xs font-mono text-neutral-500">
+                                                    {formatDistanceToNow(event.timestamp, { addSuffix: true })}
+                                                </span>
+                                                {event.blockchainTxHash && (
+                                                    <a
+                                                        href={`https://amoy.polygonscan.com/tx/${event.blockchainTxHash}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-[10px] font-bold px-1.5 py-0.5 bg-blue-900/30 text-blue-400 rounded-sm border border-blue-900/50 hover:bg-blue-900/50 transition-colors"
+                                                    >
+                                                        ⛓️ Verify On-Chain
+                                                    </a>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 )

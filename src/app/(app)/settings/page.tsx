@@ -7,11 +7,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { revalidatePath } from "next/cache"
-import { Settings, ShieldCheck, ArrowLeft, KeyRound, Trash2 } from "lucide-react"
+import { Settings, ShieldCheck, ArrowLeft, KeyRound, Trash2, Clock, Send } from "lucide-react"
 import Link from "next/link"
 import { ChangePasswordForm } from "@/components/ChangePasswordForm"
 import { DeleteAccountButton } from "@/components/DeleteAccountButton"
 import { SettingsFormWrapper } from "@/components/SettingsFormWrapper"
+import { ReleaseAllButton } from "@/components/ReleaseAllButton"
 
 export default async function SettingsPage() {
     const session = await auth()
@@ -186,6 +187,23 @@ export default async function SettingsPage() {
                     </CardHeader>
                     <CardContent>
                         <ChangePasswordForm />
+                    </CardContent>
+                </Card>
+
+                {/* Emergency Controls (Release All overrides) */}
+                <Card className="bg-neutral-900/60 backdrop-blur-xl border-red-900/30 text-white overflow-hidden relative">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-red-500" />
+                    <CardHeader className="pb-6">
+                        <CardTitle className="flex items-center gap-2 text-red-500">
+                            <Send className="w-5 h-5 text-red-500" />
+                            Emergency Controls
+                        </CardTitle>
+                        <CardDescription className="text-neutral-400">
+                            Explicitly and immediately trigger the release of your entire vault to the configured beneficiaries. This cannot be undone once sent.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ReleaseAllButton />
                     </CardContent>
                 </Card>
 
