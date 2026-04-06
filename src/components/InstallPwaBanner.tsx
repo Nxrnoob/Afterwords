@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button"
 import { Download, X } from "lucide-react"
 
 export function InstallPwaBanner() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
     const [showBanner, setShowBanner] = useState(false)
 
     useEffect(() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const handler = (e: any) => {
             e.preventDefault()
             setDeferredPrompt(e)

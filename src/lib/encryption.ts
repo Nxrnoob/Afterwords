@@ -24,7 +24,7 @@ export function decryptString(text: string): string {
             if (decoded.startsWith("ENCRYPTED:")) {
                 return decoded.replace("ENCRYPTED:", "")
             }
-        } catch (e) {
+        } catch {
             // Ignore error
         }
         throw new Error("Invalid encrypted text format")
@@ -42,7 +42,7 @@ export function decryptString(text: string): string {
         decrypted += decipher.final('utf8')
 
         return decrypted
-    } catch (error) {
+    } catch {
         throw new Error("Decryption failed. The key may have changed or data is corrupted.")
     }
 }

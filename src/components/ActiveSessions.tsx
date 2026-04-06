@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Monitor, Smartphone, Trash2 } from "lucide-react"
+import { Monitor, Smartphone } from "lucide-react"
 
 export function ActiveSessions() {
     const [deviceType, setDeviceType] = useState<"desktop" | "mobile">("desktop")

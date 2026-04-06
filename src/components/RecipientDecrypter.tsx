@@ -2,18 +2,19 @@
 
 import { useState, useEffect } from "react"
 import { decryptData, importKey } from "@/lib/client-encryption"
-import { Key, FileText, Lock, Loader2 } from "lucide-react"
+import { FileText, Lock, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export function RecipientDecrypter({ ciphertext, itemType }: { ciphertext: string, itemType: string }) {
     const [decryptedContent, setDecryptedContent] = useState<string | null>(null)
-    const [structuredData, setStructuredData] = useState<any>(null)
+    const [structuredData, setStructuredData] = useState<Record<string, string> | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
     const [manualKey, setManualKey] = useState("")
 
     useEffect(() => {
         attemptDecryption()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     async function attemptDecryption(overrideKey?: string) {

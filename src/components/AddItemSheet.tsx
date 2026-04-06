@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Plus, Lock, ArrowLeft } from "lucide-react"
+import { Plus, Lock, ArrowLeft } from "lucide-react"
 import AddItemClientWrapper from "@/app/(app)/dashboard/AddItemClientWrapper"
 
 export function AddItemSheet({ ipfsEnabled = false }: { ipfsEnabled?: boolean }) {

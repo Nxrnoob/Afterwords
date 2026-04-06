@@ -63,7 +63,7 @@ export async function importKey(base64Key: string): Promise<CryptoKey> {
     const binaryDer = base64ToBuffer(base64Key);
     return window.crypto.subtle.importKey(
         "raw",
-        binaryDer as any,
+        binaryDer.buffer as ArrayBuffer,
         { name: "AES-GCM", length: 256 },
         true,
         ["encrypt", "decrypt"]
@@ -80,7 +80,6 @@ export async function encryptData(text: string, key: CryptoKey): Promise<string>
     const ciphertext = await window.crypto.subtle.encrypt(
         {
             name: "AES-GCM",
-            // @ts-ignore
             iv: iv,
         },
         key,
@@ -108,10 +107,11 @@ export async function decryptData(encryptedStr: string, key: CryptoKey): Promise
     const decrypted = await window.crypto.subtle.decrypt(
         {
             name: "AES-GCM",
-            iv: iv as any,
+            // @ts-expect-error BufferSource type mismatch
+            iv: iv,
         },
         key,
-        ciphertext as any
+        ciphertext.buffer as ArrayBuffer
     );
     
     return new TextDecoder().decode(decrypted);

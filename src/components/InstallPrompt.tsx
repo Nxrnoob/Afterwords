@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
 
 export default function InstallPrompt() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
     const [isVisible, setIsVisible] = useState(false)
 
     useEffect(() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const handler = (e: any) => {
             // Prevent Chrome 67+ from automatically showing the prompt
             e.preventDefault()

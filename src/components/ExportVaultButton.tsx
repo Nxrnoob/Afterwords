@@ -44,7 +44,7 @@ export function ExportVaultButton() {
                 if (item.clientEncrypted && clientKey) {
                     try {
                         decryptedContent = await decryptData(item.rawCiphertext, clientKey)
-                    } catch (e) {
+                    } catch {
                         zip.file(`ERROR_${item.id}.txt`, "Failed to locally decrypt Phase 2 item. Key may be incorrect.")
                         continue
                     }
@@ -63,7 +63,7 @@ export function ExportVaultButton() {
                         const credObj = JSON.parse(decryptedContent)
                         const content = `Username: ${credObj.username}\nPassword: ${credObj.password}\nURL: ${credObj.url}\n\nRecipient: ${item.recipientEmail}`
                         credsFolder?.file(filename, content)
-                    } catch(e) {
+                    } catch {
                          zip.file(`ERROR_${item.id}.txt`, "Failed to parse credential.")
                     }
                 } else if (item.itemType === "file") {
@@ -77,7 +77,7 @@ export function ExportVaultButton() {
                             bytes[j] = binaryString.charCodeAt(j)
                         }
                         filesFolder?.file(originalName, bytes)
-                    } catch (e) {
+                    } catch {
                         zip.file(`ERROR_${item.id}.txt`, "Failed to parse file.")
                     }
                 } else {

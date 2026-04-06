@@ -5,6 +5,7 @@ import { getAuditLogs } from "@/app/actions/audit"
 import { Loader2 } from "lucide-react"
 
 export function AuditLogList() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [logs, setLogs] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
 

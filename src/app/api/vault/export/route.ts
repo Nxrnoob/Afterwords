@@ -25,6 +25,7 @@ export async function GET() {
     const credsFolder = zip.folder("Credentials")
     const filesFolder = zip.folder("Files")
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     items.forEach((item: any, index: number) => {
         try {
             const decrypted = decryptString(item.encryptedContent)

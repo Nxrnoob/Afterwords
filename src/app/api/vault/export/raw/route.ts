@@ -14,7 +14,7 @@ export async function GET() {
     })
 
     const processed = items.map(item => {
-        let clientEncrypted = item.encryptedContent.startsWith("CLIENT_ENCRYPTED:")
+        const clientEncrypted = item.encryptedContent.startsWith("CLIENT_ENCRYPTED:")
         let decryptedContent = null
         if (!clientEncrypted) {
             try {

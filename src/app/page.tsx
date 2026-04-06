@@ -27,11 +27,11 @@ export default function Home() {
 
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight bg-gradient-to-br from-white via-neutral-200 to-neutral-600 text-transparent bg-clip-text leading-tight pb-2">
           A private time capsule <br className="hidden md:block" />
-          with a dead man's switch.
+          with a dead man&apos;s switch.
         </h1>
 
         <p className="text-xl text-neutral-400 max-w-2xl mx-auto leading-relaxed">
-          Your files and messages stay completely locked. They reach the right person only if you're truly gone — automatically, securely, and completely private.
+          Your files and messages stay completely locked. They reach the right person only if you&apos;re truly gone — automatically, securely, and completely private.
         </p>
 
         <div className="pt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">

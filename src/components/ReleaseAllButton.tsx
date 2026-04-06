@@ -7,7 +7,6 @@ import { Send, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import {
     AlertDialog,
-    AlertDialogAction,
     AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
@@ -29,7 +28,7 @@ export function ReleaseAllButton() {
                     toast.success(`Success! Sent ${res.emailsSent} notification email(s).`)
                     setOpen(false)
                 }
-            } catch (err) {
+            } catch {
                 toast.error("Failed to release items.")
             }
         })

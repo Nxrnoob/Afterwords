@@ -5,7 +5,6 @@ import prisma from "@/lib/prisma"
 import { recordAuditLog } from "@/lib/audit"
 import { notarizeAction, createDataHash } from "@/lib/blockchain"
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 
 export async function checkin(options?: boolean | FormData | { shouldRevalidate?: boolean, shouldNotarize?: boolean }) {
     let shouldRevalidate = true
@@ -237,13 +236,13 @@ export async function getDecryptedVaultItem(id: string) {
             try {
                 const parsed = JSON.parse(decrypted)
                 return { success: true, item: { ...item, decryptedContent: null, credentials: parsed } }
-            } catch (e) {
+            } catch {
                 return { success: false, error: "Failed to parse structured data" }
             }
         }
 
         return { success: true, item: { ...item, decryptedContent: decrypted, credentials: null } }
-    } catch (e) {
+    } catch {
         return { success: false, error: "Failed to decrypt item. Key may have changed." }
     }
 }
@@ -257,6 +256,7 @@ export async function deleteVaultItem(id: string) {
     })
 
     await recordAuditLog({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         action: 'VAULT_ITEM_DELETED' as any,
         userId: session.user.id,
         entityType: 'VaultItem',

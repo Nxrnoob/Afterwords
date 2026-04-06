@@ -61,6 +61,7 @@ export async function forceReleaseItem(itemId: string) {
     return { success: true, emailsSent }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function explicitlyReleaseItem(user: any, item: any) {
     const recipients = new Set<string>()
 

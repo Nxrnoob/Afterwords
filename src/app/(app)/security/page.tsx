@@ -1,56 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Shield, KeyRound, Smartphone, Monitor, Lock, Download, Trash2, Fingerprint } from "lucide-react"
+import { Shield, KeyRound, Monitor, Lock, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
-import { Switch } from "@/components/ui/switch"
-import { Input } from "@/components/ui/input"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { ActiveSessions } from "@/components/ActiveSessions"
 import { AuditLogList } from "@/components/AuditLogList"
 
 export default function SecurityPage() {
-    const [appLockEnabled, setAppLockEnabled] = useState(false)
-    const [pinSetupVisible, setPinSetupVisible] = useState(false)
-    const [newPin, setNewPin] = useState("")
-    const [pinError, setPinError] = useState("")
-
-    useEffect(() => {
-        const existingPin = localStorage.getItem("afterword_app_lock_pin")
-        if (existingPin) {
-            setAppLockEnabled(true)
-        }
-    }, [])
-
-    const handleToggleLock = (checked: boolean) => {
-        if (!checked) {
-            localStorage.removeItem("afterword_app_lock_pin")
-            setAppLockEnabled(false)
-            setPinSetupVisible(false)
-            setNewPin("")
-        } else {
-            setPinSetupVisible(true)
-        }
-    }
-
-    const handleSavePin = async () => {
-        if (newPin.length !== 4 || !/^\d+$/.test(newPin)) {
-            setPinError("PIN must be exactly 4 digits.")
-            return
-        }
-
-        const encoder = new TextEncoder()
-        const data = encoder.encode(newPin)
-        const hashBuffer = await window.crypto.subtle.digest("SHA-256", data)
-        const hashArray = Array.from(new Uint8Array(hashBuffer))
-        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-
-        localStorage.setItem("afterword_app_lock_pin", hashHex)
-        setAppLockEnabled(true)
-        setPinSetupVisible(false)
-        setNewPin("")
-        setPinError("")
-    }
 
     return (
         <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-10">

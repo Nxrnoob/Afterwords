@@ -35,8 +35,9 @@ export default async function RecipientAccessPage({
     }
 
     // 3. Decrypt payload
-    let isClientEncrypted = releaseToken.vaultItem.encryptedContent.startsWith("CLIENT_ENCRYPTED:")
+    const isClientEncrypted = releaseToken.vaultItem.encryptedContent.startsWith("CLIENT_ENCRYPTED:")
     let decryptedContent = "Error decrypting content."
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let structuredData: any = null
 
     if (!isClientEncrypted) {

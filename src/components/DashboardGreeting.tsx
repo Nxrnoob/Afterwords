@@ -9,7 +9,7 @@ interface DashboardGreetingProps {
     daysRemaining: number
 }
 
-export function DashboardGreeting({ name, itemCount, contactCount, daysRemaining }: DashboardGreetingProps) {
+export function DashboardGreeting({ name, itemCount, contactCount }: DashboardGreetingProps) {
     const greeting = useMemo(() => {
         const hour = new Date().getHours()
         if (hour < 12) return "Good morning"
