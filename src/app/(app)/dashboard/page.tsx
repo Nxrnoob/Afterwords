@@ -9,6 +9,7 @@ import VaultItemViewer from "./VaultItemViewer"
 import { ExportVaultButton } from "@/components/ExportVaultButton"
 import { AddItemSheet } from "@/components/AddItemSheet"
 import { DashboardGreeting } from "@/components/DashboardGreeting"
+import { OnboardingBanner } from "@/components/OnboardingBanner"
 import Link from "next/link"
 
 export default async function DashboardPage() {
@@ -86,6 +87,13 @@ export default async function DashboardPage() {
                         <span className="text-neutral-500">until check-in</span>
                     </div>
                 </div>
+
+                {/* Onboarding */}
+                <OnboardingBanner
+                    hasContacts={user.Contact.length > 0}
+                    hasItems={user.items.length > 0}
+                    hasSettings={!!user.settings}
+                />
 
                 <div className="space-y-8">
                     {/* Status Card */}

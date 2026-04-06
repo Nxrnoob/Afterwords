@@ -260,11 +260,68 @@ async function releaseVaultItems(user: {
                 console.error("IPFS fetch failed during global cron release:", e)
             }
         }
-    
-        const attachments = [{
-            filename: `${item.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_secure_payload.txt`,
-            content: attachmentContent
-        }]
+
+        // Build human-readable attachments
+        const attachments: { filename: string; content: string | Buffer }[] = []
+        const cleanTitle = item.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+
+        if (attachmentContent.startsWith("CLIENT_ENCRYPTED:")) {
+            attachments.push({
+                filename: `${cleanTitle}_encrypted_payload.txt`,
+                content: [
+                    `This vault item "${item.title}" is protected with Zero-Knowledge encryption.`,
+                    `The server does not have the decryption key.`,
+                    ``,
+                    `To view the contents, you will need the decryption key from the vault owner.`,
+                    `Visit the Afterword platform and use the recipient access link provided.`,
+                    ``,
+                    `Encrypted payload (for safekeeping):`,
+                    attachmentContent
+                ].join("\n")
+            })
+        } else {
+            try {
+                const { decryptString } = await import("@/lib/encryption")
+                const decrypted = decryptString(attachmentContent)
+
+                if (item.title && decrypted) {
+                    // Try to detect item type from content
+                    try {
+                        const parsed = JSON.parse(decrypted)
+                        if (parsed.filename && parsed.data) {
+                            // File type
+                            attachments.push({
+                                filename: parsed.filename || `${cleanTitle}.bin`,
+                                content: Buffer.from(parsed.data, "base64")
+                            })
+                        } else if (parsed.username) {
+                            // Credential type
+                            const readable = [
+                                `Credential: "${item.title}"`,
+                                `─────────────────────────`,
+                                `Username / Email: ${parsed.username || "N/A"}`,
+                                `Password: ${parsed.password || "N/A"}`,
+                                parsed.url ? `URL: ${parsed.url}` : "",
+                                ``,
+                                `— Released via Afterword`
+                            ].filter(Boolean).join("\n")
+                            attachments.push({ filename: `${cleanTitle}_credential.txt`, content: readable })
+                        } else {
+                            attachments.push({ filename: `${cleanTitle}.txt`, content: decrypted })
+                        }
+                    } catch {
+                        // Plain text note
+                        attachments.push({ filename: `${cleanTitle}.txt`, content: decrypted })
+                    }
+                }
+            } catch (decErr) {
+                console.error(`[CRON RELEASE] Failed to decrypt item "${item.title}":`, decErr)
+                attachments.push({
+                    filename: `${cleanTitle}_encrypted.txt`,
+                    content: attachmentContent
+                })
+            }
+        }
 
         // Send to each recipient
         for (const recipientEmail of Array.from(recipients)) {

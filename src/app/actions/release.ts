@@ -96,10 +96,70 @@ async function explicitlyReleaseItem(user: any, item: any) {
         }
     }
 
-    const attachments = [{
-        filename: `${item.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_secure_payload.txt`,
-        content: attachmentContent
-    }]
+    // Build human-readable attachments
+    const attachments: { filename: string; content: string | Buffer }[] = []
+    const cleanTitle = item.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+
+    if (attachmentContent.startsWith("CLIENT_ENCRYPTED:")) {
+        // Client-side encrypted — server cannot decrypt. Attach a note.
+        attachments.push({
+            filename: `${cleanTitle}_encrypted_payload.txt`,
+            content: [
+                `This vault item "${item.title}" is protected with Zero-Knowledge encryption.`,
+                `The server does not have the decryption key.`,
+                ``,
+                `To view the contents, you will need the decryption key from the vault owner.`,
+                `Visit the Afterword platform and use the recipient access link provided.`,
+                ``,
+                `Encrypted payload (for safekeeping):`,
+                attachmentContent
+            ].join("\n")
+        })
+    } else {
+        // Server-side encrypted — decrypt and attach readable content
+        try {
+            const { decryptString } = await import("@/lib/encryption")
+            const decrypted = decryptString(attachmentContent)
+
+            if (item.itemType === "file") {
+                try {
+                    const fileObj = JSON.parse(decrypted)
+                    // Attach the actual binary file
+                    attachments.push({
+                        filename: fileObj.filename || `${cleanTitle}.bin`,
+                        content: Buffer.from(fileObj.data, "base64")
+                    })
+                } catch {
+                    attachments.push({ filename: `${cleanTitle}.txt`, content: decrypted })
+                }
+            } else if (item.itemType === "credential") {
+                try {
+                    const cred = JSON.parse(decrypted)
+                    const readable = [
+                        `Credential: "${item.title}"`,
+                        `─────────────────────────`,
+                        `Username / Email: ${cred.username || "N/A"}`,
+                        `Password: ${cred.password || "N/A"}`,
+                        cred.url ? `URL: ${cred.url}` : "",
+                        ``,
+                        `— Released via Afterword`
+                    ].filter(Boolean).join("\n")
+                    attachments.push({ filename: `${cleanTitle}_credential.txt`, content: readable })
+                } catch {
+                    attachments.push({ filename: `${cleanTitle}.txt`, content: decrypted })
+                }
+            } else {
+                // Plain note
+                attachments.push({ filename: `${cleanTitle}.txt`, content: decrypted })
+            }
+        } catch (decErr) {
+            console.error(`[RELEASE] Failed to decrypt item "${item.title}":`, decErr)
+            attachments.push({
+                filename: `${cleanTitle}_encrypted.txt`,
+                content: attachmentContent
+            })
+        }
+    }
 
     let emailsSent = 0
     for (const recipientEmail of Array.from(recipients)) {

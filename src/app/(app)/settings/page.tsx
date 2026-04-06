@@ -13,6 +13,7 @@ import { ChangePasswordForm } from "@/components/ChangePasswordForm"
 import { DeleteAccountButton } from "@/components/DeleteAccountButton"
 import { SettingsFormWrapper } from "@/components/SettingsFormWrapper"
 import { ReleaseAllButton } from "@/components/ReleaseAllButton"
+import { TimezoneSelect } from "@/components/TimezoneSelect"
 
 export default async function SettingsPage() {
     const session = await auth()
@@ -136,23 +137,11 @@ export default async function SettingsPage() {
 
                             <div className="space-y-3">
                                 <Label htmlFor="timezone" className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Timezone</Label>
-                                <select
-                                    id="timezone"
+                                <TimezoneSelect
                                     name="timezone"
+                                    defaultValue={settings?.timezone || undefined}
                                     className="flex h-12 w-full rounded-md border border-neutral-800 bg-neutral-950/50 px-4 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-600 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M6%209L12%2015L18%209%22%20stroke%3D%22%23666666%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[position:right_16px_center] bg-no-repeat"
-                                    defaultValue={settings?.timezone || "UTC"}
-                                >
-                                    <option value="UTC">UTC</option>
-                                    <option value="America/New_York">Eastern Time (US)</option>
-                                    <option value="America/Chicago">Central Time (US)</option>
-                                    <option value="America/Denver">Mountain Time (US)</option>
-                                    <option value="America/Los_Angeles">Pacific Time (US)</option>
-                                    <option value="Europe/London">London (GMT/BST)</option>
-                                    <option value="Europe/Paris">Central Europe (CET)</option>
-                                    <option value="Asia/Tokyo">Tokyo (JST)</option>
-                                    <option value="Asia/Calcutta">India (IST)</option>
-                                    <option value="Australia/Sydney">Sydney (AEDT)</option>
-                                </select>
+                                />
                             </div>
 
                             <div className="flex items-center justify-between p-4 bg-neutral-950/50 rounded-lg border border-neutral-800">

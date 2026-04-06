@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 
@@ -20,6 +21,17 @@ export default function Home() {
         transition={{ duration: 0.8 }}
         className="max-w-3xl space-y-8 relative z-10"
       >
+        <div className="flex justify-center mb-6">
+          <Image
+            src="/icon-512x512.png"
+            alt="Afterword Logo"
+            width={72}
+            height={72}
+            className="rounded-2xl shadow-[0_0_40px_-10px_rgba(59,130,246,0.3)]"
+            priority
+          />
+        </div>
+
         <div className="inline-flex items-center rounded-full border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm px-3 py-1 text-sm text-neutral-300 font-medium mb-4">
           <span className="flex h-2 w-2 rounded-full bg-blue-500 mr-2 animate-pulse"></span>
           Afterword Phase 1 is Live

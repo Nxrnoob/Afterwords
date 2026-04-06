@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { encryptData, importKey } from "@/lib/client-encryption"
 import { useEffect } from "react"
 import { getContacts } from "@/app/actions/contacts"
+import Link from "next/link"
 
 export default function AddItemClientWrapper({ onSuccess, ipfsEnabled = false }: { onSuccess?: () => void; ipfsEnabled?: boolean }) {
     const [itemType, setItemType] = useState<"note" | "credential" | "file">("note")
@@ -156,6 +157,14 @@ export default function AddItemClientWrapper({ onSuccess, ipfsEnabled = false }:
                             <option key={contact.id} value={contact.email}>{contact.name} ({contact.email})</option>
                         ))}
                     </select>
+                    <Link
+                        href="/beneficiaries"
+                        className="inline-flex items-center gap-1 text-xs text-neutral-500 hover:text-white transition-colors mt-1.5"
+                    >
+                        {contacts.length === 0
+                            ? "No contacts yet — Add a beneficiary first →"
+                            : "+ Manage beneficiaries"}
+                    </Link>
                 </div>
 
                 <div className="space-y-2">

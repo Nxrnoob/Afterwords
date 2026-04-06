@@ -1,19 +1,13 @@
-# Enhancement Tasks
+# Afterword — Task List
 
-- [x] 1. Dashboard Welcome
-  - [x] Extract name/email in `dashboard/page.tsx` and render personalized greeting.
-- [x] 2. Beneficiary Selection
-  - [x] Add `getContacts` action.
-  - [x] Update `AddItemClientWrapper` to fetch and display contacts in a dropdown instead of raw text input.
-- [ ] 3. User-Centric Settings (Edge Cases)
-  - [x] Add `timezone` and `isPaused` to `VaultSetting` in DB schema. Run migration.
-  - [x] Add Timezone selector and Emergency Pause toggle to Settings UI.
-  - [x] Update `updateSettings` server action to accept new fields.
-- [x] 4. Actual Email Dispatch
-  - [x] Update `cron/trigger/route.ts` to skip processing if `isPaused` is true.
-  - [x] Update `cron/trigger/route.ts` to call `sendEmail` for Warning 1, Warning 2, and Vault Release.
-  - [x] Ensure Vault Release properly decrypts content and emails specific beneficiaries.
-- [x] 5. Blockchain Storage Pipeline (IPFS)
-  - [x] Database Schema updates (StorageProvider)
-  - [x] Pinata upload integration (`src/lib/ipfs.ts`)
-  - [x] AddItem UI storage selector
+## Current Sprint (2026-04-06)
+
+- [x] 1. Onboarding flow — guide new users to create beneficiary first (step-by-step wizard)
+- [x] 2. Fix: Attached file secured data doesn't get sent in email
+- [x] 3. Fix: Decryption error — email attachment shows random strings instead of readable content
+- [x] 4. Default timezone to user's current timezone
+- [x] 5. Use existing logo for favicon and homepage (replace current placeholder)
+- [x] 6. Add "Add Beneficiary" link in the beneficiary select dropdown
+
+## Completed (2026-04-06)
+- All 6 tasks completed in this sprint
