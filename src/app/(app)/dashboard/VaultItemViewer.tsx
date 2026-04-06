@@ -31,6 +31,7 @@ type DecryptedItem = {
     } | null
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function VaultItemViewer({ items }: { items: any[] }) {
     const [selectedItem, setSelectedItem] = useState<DecryptedItem | null>(null)
     const [isOpen, setIsOpen] = useState(false)
@@ -39,17 +40,20 @@ export default function VaultItemViewer({ items }: { items: any[] }) {
 
     // Per-item schedule config
     const [scheduleOpen, setScheduleOpen] = useState(false)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [scheduleItem, setScheduleItem] = useState<any>(null)
     const [scheduleDate, setScheduleDate] = useState("")
     const [isPending, startTransition] = useTransition()
     const [isDeleting, setIsDeleting] = useState(false)
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async function handleView(item: any) {
         setLoadingId(item.id)
         try {
             const res = await getDecryptedVaultItem(item.id)
             if (res.success && res.item) {
-                let displayItem: any = { ...res.item }
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const displayItem = { ...res.item } as any
 
                 if (displayItem.clientEncrypted && displayItem.rawCiphertext) {
                     const b64Key = sessionStorage.getItem("afterword_vault_key")
@@ -67,9 +71,10 @@ export default function VaultItemViewer({ items }: { items: any[] }) {
                         } else {
                             displayItem.decryptedContent = dec
                         }
-                    } catch (decErr: any) {
+                    } catch (decErr: unknown) {
+                        const errMsg = decErr instanceof Error ? decErr.message : "Unknown error"
                         console.error("Local Decryption Error:", decErr)
-                        toast.error(`Local Decryption Error: ${decErr?.message || "Unknown error"}`)
+                        toast.error(`Local Decryption Error: ${errMsg}`)
                         setLoadingId(null)
                         return
                     }
@@ -81,13 +86,14 @@ export default function VaultItemViewer({ items }: { items: any[] }) {
             } else {
                 toast.error(res.error || "Failed to retrieve item")
             }
-        } catch (e) {
+        } catch {
             toast.error("An unexpected error occurred")
         } finally {
             setLoadingId(null)
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function openScheduleConfig(e: React.MouseEvent, item: any) {
         e.stopPropagation() // Don't trigger card click (view)
         setScheduleItem(item)

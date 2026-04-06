@@ -1,7 +1,7 @@
 import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
 import { redirect } from "next/navigation"
-import { Clock, ShieldCheck, FilePlus, Fingerprint, UserPlus, KeyRound, Settings, AlertTriangle } from "lucide-react"
+import { Clock, ShieldCheck, FilePlus, Fingerprint, UserPlus, KeyRound, AlertTriangle } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { formatDistanceToNow } from "date-fns"
 

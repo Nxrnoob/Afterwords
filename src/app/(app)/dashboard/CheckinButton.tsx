@@ -5,7 +5,7 @@ import { checkin } from "@/app/actions/vault"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 
-export default function CheckinButton({ isCritical, isWarning }: { isCritical: boolean, isWarning: boolean }) {
+export default function CheckinButton() {
     const [loading, setLoading] = useState(false)
 
     async function handleCheckin() {
@@ -13,7 +13,7 @@ export default function CheckinButton({ isCritical, isWarning }: { isCritical: b
         try {
             await checkin(true)
             toast.success("Successfully checked in. Grace period stopped.")
-        } catch (e) {
+        } catch {
             toast.error("Failed to check in.")
         } finally {
             setLoading(false)

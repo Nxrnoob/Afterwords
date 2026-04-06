@@ -15,6 +15,7 @@ export default function AddItemClientWrapper({ onSuccess, ipfsEnabled = false }:
     const [storageProvider, setStorageProvider] = useState<"DATABASE" | "IPFS">("DATABASE")
     const [loading, setLoading] = useState(false)
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [contacts, setContacts] = useState<any[]>([])
 
     useEffect(() => {
