@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { sendEmail } from "@/lib/email"
+import { getAppUrl } from "@/lib/url"
 
 /**
  * POST /api/cron/trigger
@@ -76,7 +77,7 @@ export async function POST(req: Request) {
                                     <h2>A scheduled vault item has been released</h2>
                                     <p><strong>${user.email}</strong> scheduled the item "<strong>${item.title}</strong>" for release on ${new Date(item.scheduledReleaseDate!).toLocaleDateString()}.</p>
                                     <p style="margin-top: 20px;">
-                                        <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}" 
+                                        <a href="${getAppUrl()}" 
                                            style="background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">
                                             View on Afterword →
                                         </a>
@@ -129,7 +130,7 @@ export async function POST(req: Request) {
                             <p>You haven't checked in for <strong>${unitsSinceCheckin} ${unitLabel}</strong>.</p>
                             <p>If you don't check in during the grace period, your vault items will be released to your beneficiaries.</p>
                             <p style="margin-top: 20px;">
-                                <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard" 
+                                <a href="${getAppUrl()}/dashboard" 
                                    style="background: #fff; color: #000; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">
                                     Check In Now →
                                 </a>
@@ -277,7 +278,7 @@ async function releaseVaultItems(user: {
                     expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
                 }
             })
-            releaseLink = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/recipient/${token.token}`
+            releaseLink = `${getAppUrl()}/recipient/${token.token}`
         } else {
             try {
                 const { decryptString } = await import("@/lib/encryption")

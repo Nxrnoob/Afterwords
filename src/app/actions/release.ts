@@ -4,6 +4,7 @@ import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
 import { sendEmail } from "@/lib/email"
 import { revalidatePath } from "next/cache"
+import { getAppUrl } from "@/lib/url"
 
 export async function forceReleaseAll() {
     const session = await auth()
@@ -111,7 +112,7 @@ async function explicitlyReleaseItem(user: any, item: any) {
                 expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
             }
         })
-        releaseLink = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/recipient/${token.token}`
+        releaseLink = `${getAppUrl()}/recipient/${token.token}`
     } else {
         // Server-side encrypted — decrypt and attach readable content
         try {
