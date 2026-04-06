@@ -334,7 +334,10 @@ async function releaseVaultItems(user: {
                             <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
                                 <strong style="font-size: 18px;">"${item.title}"</strong>
                             </div>
-                            <p>This item is protected with <strong>Zero-Knowledge encryption</strong>. To view and download the contents, you will need the decryption key from the vault owner.</p>
+                            <p>This item is protected with <strong>Zero-Knowledge encryption</strong>. To view and download the contents, click below and enter the <strong>Secret Key</strong> that ${user.email} shared with you in advance.</p>
+                            <p style="background: #fff8e1; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 4px; font-size: 13px; color: #444;">
+                                💡 The Secret Key was generated when ${user.email} created their Afterword account. They should have shared it with you (e.g., written on paper, in a password manager, or in a sealed envelope).
+                            </p>
                             <p style="margin-top: 20px;">
                                 <a href="${releaseLink}" 
                                    style="background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">

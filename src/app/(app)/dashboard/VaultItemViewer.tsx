@@ -130,10 +130,13 @@ export default function VaultItemViewer({ items }: { items: any[] }) {
     function handleForceRelease() {
         if (!selectedItem) return
         if (!confirm("Are you sure you want to release this immediately? This is irreversible.")) return
-        
+
+        // Read the client key from sessionStorage so recipients can auto-decrypt
+        const clientKey = sessionStorage.getItem("afterword_vault_key") || undefined
+
         startTransition(async () => {
             try {
-                const res = await forceReleaseItem(selectedItem.id)
+                const res = await forceReleaseItem(selectedItem.id, clientKey)
                 if (res?.success) {
                     toast.success(`Released! Sent ${res.emailsSent} notification email(s).`)
                     setIsOpen(false)

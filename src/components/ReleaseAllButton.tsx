@@ -21,9 +21,12 @@ export function ReleaseAllButton() {
     const [open, setOpen] = useState(false)
 
     function handleForceRelease() {
+        // Read the client key from sessionStorage so recipients can auto-decrypt
+        const clientKey = sessionStorage.getItem("afterword_vault_key") || undefined
+
         startTransition(async () => {
             try {
-                const res = await forceReleaseAll()
+                const res = await forceReleaseAll(clientKey)
                 if (res?.success) {
                     toast.success(`Success! Sent ${res.emailsSent} notification email(s).`)
                     setOpen(false)

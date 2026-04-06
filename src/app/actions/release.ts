@@ -6,7 +6,7 @@ import { sendEmail } from "@/lib/email"
 import { revalidatePath } from "next/cache"
 import { getAppUrl } from "@/lib/url"
 
-export async function forceReleaseAll() {
+export async function forceReleaseAll(clientKey?: string) {
     const session = await auth()
     if (!session?.user?.id) throw new Error("Unauthorized")
 
@@ -27,14 +27,14 @@ export async function forceReleaseAll() {
 
     let emailsSent = 0
     for (const item of user.items) {
-        emailsSent += await explicitlyReleaseItem(user, item)
+        emailsSent += await explicitlyReleaseItem(user, item, clientKey)
     }
 
     revalidatePath("/dashboard")
     return { success: true, emailsSent }
 }
 
-export async function forceReleaseItem(itemId: string) {
+export async function forceReleaseItem(itemId: string, clientKey?: string) {
     const session = await auth()
     if (!session?.user?.id) throw new Error("Unauthorized")
 
@@ -57,13 +57,13 @@ export async function forceReleaseItem(itemId: string) {
 
     if (!item) throw new Error("Item not found")
 
-    const emailsSent = await explicitlyReleaseItem(user, item)
+    const emailsSent = await explicitlyReleaseItem(user, item, clientKey)
     revalidatePath("/dashboard")
     return { success: true, emailsSent }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function explicitlyReleaseItem(user: any, item: any) {
+async function explicitlyReleaseItem(user: any, item: any, clientKey?: string) {
     const recipients = new Set<string>()
 
     // 1. Item-specific contacts
@@ -108,11 +108,13 @@ async function explicitlyReleaseItem(user: any, item: any) {
         const token = await prisma.releaseToken.create({
             data: {
                 vaultItemId: item.id,
-                recipientEmail: "", // will be set per-recipient in the loop
-                expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+                recipientEmail: "",
+                expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
             }
         })
-        releaseLink = `${getAppUrl()}/recipient/${token.token}`
+        // Append the client key as a URL hash so recipient auto-decrypts (hash never hits server)
+        const hashSuffix = clientKey ? `#${clientKey}` : ""
+        releaseLink = `${getAppUrl()}/recipient/${token.token}${hashSuffix}`
     } else {
         // Server-side encrypted — decrypt and attach readable content
         try {
