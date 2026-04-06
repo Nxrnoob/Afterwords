@@ -11,6 +11,7 @@ import { Settings, ShieldCheck, ArrowLeft, KeyRound, Trash2 } from "lucide-react
 import Link from "next/link"
 import { ChangePasswordForm } from "@/components/ChangePasswordForm"
 import { DeleteAccountButton } from "@/components/DeleteAccountButton"
+import { SettingsFormWrapper } from "@/components/SettingsFormWrapper"
 
 export default async function SettingsPage() {
     const session = await auth()
@@ -86,7 +87,7 @@ export default async function SettingsPage() {
                             Configure how long the system waits before notifying your trusted contacts.
                         </CardDescription>
                     </CardHeader>
-                    <form action={updateSettings}>
+                    <SettingsFormWrapper action={updateSettings}>
                         <CardContent className="space-y-8">
                             <div className="space-y-3">
                                 <Label htmlFor="interval" className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Check-in Interval</Label>
@@ -123,9 +124,9 @@ export default async function SettingsPage() {
                                 <Input
                                     id="scheduledRelease"
                                     name="scheduledRelease"
-                                    type="date"
+                                    type="datetime-local"
                                     className="h-12 bg-neutral-950/50 border-neutral-800 focus-visible:ring-neutral-600 text-white transition-colors [color-scheme:dark]"
-                                    defaultValue={settings?.scheduledReleaseDate ? new Date(settings.scheduledReleaseDate).toISOString().split('T')[0] : ""}
+                                    defaultValue={settings?.scheduledReleaseDate ? new Date(settings.scheduledReleaseDate).toISOString().slice(0, 16) : ""}
                                 />
                                 <p className="text-xs text-neutral-500">
                                     If set, your vault will be automatically released on this exact date regardless of check-ins.
@@ -168,7 +169,7 @@ export default async function SettingsPage() {
                                 </Button>
                             </div>
                         </CardContent>
-                    </form>
+                    </SettingsFormWrapper>
                 </Card>
 
                 {/* Change Password */}

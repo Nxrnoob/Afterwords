@@ -7,6 +7,7 @@ import { Lock, Clock, LogOut, Settings, Users, ShieldCheck } from "lucide-react"
 import CheckinButton from "./CheckinButton"
 import VaultItemViewer from "./VaultItemViewer"
 import { ExportVaultButton } from "@/components/ExportVaultButton"
+import { ReleaseAllButton } from "@/components/ReleaseAllButton"
 import { AddItemSheet } from "@/components/AddItemSheet"
 import { DashboardGreeting } from "@/components/DashboardGreeting"
 import Link from "next/link"
@@ -54,6 +55,7 @@ export default async function DashboardPage() {
                         daysRemaining={Math.max(0, daysRemaining)}
                     />
                     <div className="flex items-center gap-3">
+                        <ReleaseAllButton />
                         <ExportVaultButton />
                         <Link href="/settings">
                             <Button variant="ghost" size="icon" className="text-neutral-400 hover:text-white hover:bg-neutral-900 transition-colors">

@@ -10,7 +10,7 @@ import { encryptData, importKey } from "@/lib/client-encryption"
 import { useEffect } from "react"
 import { getContacts } from "@/app/actions/contacts"
 
-export default function AddItemClientWrapper() {
+export default function AddItemClientWrapper({ onSuccess }: { onSuccess?: () => void }) {
     const [itemType, setItemType] = useState<"note" | "credential" | "file">("note")
     const [storageProvider, setStorageProvider] = useState<"DATABASE" | "IPFS">("DATABASE")
     const [loading, setLoading] = useState(false)
@@ -77,6 +77,8 @@ export default function AddItemClientWrapper() {
             setSelectedFile(null)
             const formObj = document.getElementById("addItemForm") as HTMLFormElement
             if (formObj) formObj.reset()
+            // Close the sheet & go back to dashboard
+            if (onSuccess) onSuccess()
         } catch (e) {
             console.error(e)
             toast.error("Failed to encrypt and save item.")
@@ -146,6 +148,20 @@ export default function AddItemClientWrapper() {
                             <option key={contact.id} value={contact.email}>{contact.name} ({contact.email})</option>
                         ))}
                     </select>
+                </div>
+
+                <div className="space-y-2">
+                    <label htmlFor="scheduledRelease" className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                        <span>Scheduled Release Date</span>
+                        <span className="text-[10px] lowercase bg-neutral-800 px-1.5 py-0.5 rounded text-neutral-400">Optional</span>
+                    </label>
+                    <input 
+                        id="scheduledRelease" 
+                        name="scheduledRelease" 
+                        type="datetime-local" 
+                        className="flex h-10 w-full rounded-md border border-neutral-800 bg-neutral-950/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-600 text-white transition-colors [color-scheme:dark]" 
+                    />
+                    <p className="text-xs text-neutral-500">Overrides global settings to release this specific item exactly on this date & time.</p>
                 </div>
 
                 <AnimatePresence mode="popLayout">

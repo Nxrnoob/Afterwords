@@ -1,11 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { getDecryptedVaultItem } from "@/app/actions/vault"
-import { FileText, Key, Loader2, Eye, EyeOff } from "lucide-react"
+import { updateItemSchedule } from "@/app/actions/item-schedule"
+import { forceReleaseItem } from "@/app/actions/release"
+import { FileText, Key, Loader2, Eye, EyeOff, Settings2, CalendarClock, CheckCircle2, Send } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { decryptData, importKey } from "@/lib/client-encryption"
 
 type DecryptedItem = {
@@ -32,6 +36,12 @@ export default function VaultItemViewer({ items }: { items: any[] }) {
     const [isOpen, setIsOpen] = useState(false)
     const [loadingId, setLoadingId] = useState<string | null>(null)
     const [showPassword, setShowPassword] = useState(false)
+
+    // Per-item schedule config
+    const [scheduleOpen, setScheduleOpen] = useState(false)
+    const [scheduleItem, setScheduleItem] = useState<any>(null)
+    const [scheduleDate, setScheduleDate] = useState("")
+    const [isPending, startTransition] = useTransition()
 
     async function handleView(item: any) {
         setLoadingId(item.id)
@@ -76,6 +86,56 @@ export default function VaultItemViewer({ items }: { items: any[] }) {
         }
     }
 
+    function openScheduleConfig(e: React.MouseEvent, item: any) {
+        e.stopPropagation() // Don't trigger card click (view)
+        setScheduleItem(item)
+        setScheduleDate(item.scheduledReleaseDate ? new Date(item.scheduledReleaseDate).toISOString().slice(0, 16) : "")
+        setScheduleOpen(true)
+    }
+
+    function handleScheduleSave() {
+        if (!scheduleItem) return
+        startTransition(async () => {
+            try {
+                await updateItemSchedule(scheduleItem.id, scheduleDate || null)
+                toast.success(scheduleDate ? `Release scheduled for ${scheduleDate}` : "Per-item schedule removed")
+                setScheduleOpen(false)
+            } catch {
+                toast.error("Failed to update schedule")
+            }
+        })
+    }
+
+    function handleScheduleClear() {
+        if (!scheduleItem) return
+        startTransition(async () => {
+            try {
+                await updateItemSchedule(scheduleItem.id, null)
+                toast.success("Per-item schedule cleared")
+                setScheduleOpen(false)
+            } catch {
+                toast.error("Failed to clear schedule")
+            }
+        })
+    }
+
+    function handleForceRelease() {
+        if (!selectedItem) return
+        if (!confirm("Are you sure you want to release this immediately? This is irreversible.")) return
+        
+        startTransition(async () => {
+            try {
+                const res = await forceReleaseItem(selectedItem.id)
+                if (res?.success) {
+                    toast.success(`Released! Sent ${res.emailsSent} notification email(s).`)
+                    setIsOpen(false)
+                }
+            } catch {
+                toast.error("Failed to force release this item.")
+            }
+        })
+    }
+
     return (
         <>
             <div className="grid sm:grid-cols-2 gap-4">
@@ -97,25 +157,43 @@ export default function VaultItemViewer({ items }: { items: any[] }) {
                                 <div>
                                     <h3 className="font-medium text-neutral-200 group-hover:text-white transition-colors">{item.title}</h3>
                                     <div className="flex items-center gap-2 mt-0.5">
-                                        <p className="text-xs text-neutral-500 truncate max-w-[150px]">To: {item.recipientEmail}</p>
+                                        <p className="text-xs text-neutral-500 truncate max-w-[120px]">To: {item.recipientEmail}</p>
                                         {item.storageProvider === "IPFS" && (
                                             <span className="text-[10px] font-bold px-1.5 py-0.5 bg-emerald-900/30 text-emerald-500 rounded-sm border border-emerald-900/50">
                                                 IPFS
                                             </span>
                                         )}
+                                        {item.scheduledReleaseDate && (
+                                            <span className="text-[10px] font-bold px-1.5 py-0.5 bg-purple-900/30 text-purple-400 rounded-sm border border-purple-900/50 flex items-center gap-0.5">
+                                                <CalendarClock className="w-2.5 h-2.5" />
+                                                {new Date(item.scheduledReleaseDate).toLocaleString(undefined, {
+                                                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                                                })}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
-                            {loadingId === item.id ? (
-                                <Loader2 className="w-4 h-4 text-neutral-500 animate-spin" />
-                            ) : (
-                                <div className="w-2 h-2 rounded-full bg-emerald-500/50 mt-1"></div>
-                            )}
+                            <div className="flex items-center gap-1.5">
+                                <button
+                                    onClick={(e) => openScheduleConfig(e, item)}
+                                    className="p-1.5 rounded-md text-neutral-600 hover:text-neutral-300 hover:bg-neutral-800 transition-colors opacity-0 group-hover:opacity-100"
+                                    title="Configure release schedule"
+                                >
+                                    <Settings2 className="w-3.5 h-3.5" />
+                                </button>
+                                {loadingId === item.id ? (
+                                    <Loader2 className="w-4 h-4 text-neutral-500 animate-spin" />
+                                ) : (
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500/50 mt-1"></div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 ))}
             </div>
 
+            {/* Item View Dialog */}
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogContent className="bg-neutral-950 border-neutral-800 text-white sm:max-w-md">
                     <DialogHeader>
@@ -187,6 +265,78 @@ export default function VaultItemViewer({ items }: { items: any[] }) {
                                 </p>
                             </div>
                         )}
+                        <div className="pt-4 border-t border-neutral-800/60 mt-6 flex justify-end">
+                            <Button 
+                                variant="outline" 
+                                disabled={isPending}
+                                onClick={handleForceRelease}
+                                className="text-red-400 border-red-900/30 bg-red-950/10 hover:bg-red-950/30 hover:text-red-300 transition-colors"
+                            >
+                                <Send className="w-4 h-4 mr-2" />
+                                {isPending ? "Releasing..." : "Force Release Now"}
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Per-Item Schedule Config Dialog */}
+            <Dialog open={scheduleOpen} onOpenChange={setScheduleOpen}>
+                <DialogContent className="bg-neutral-950 border-neutral-800 text-white sm:max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-lg">
+                            <CalendarClock className="w-5 h-5 text-purple-400" />
+                            Release Schedule
+                        </DialogTitle>
+                        <DialogDescription className="text-neutral-400">
+                            Set a dedicated release date for &quot;{scheduleItem?.title}&quot;. This overrides the global dead man&apos;s switch for this specific item.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="mt-4 space-y-4">
+                        <div className="space-y-2">
+                            <Label className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Release Date</Label>
+                            <Input
+                                type="datetime-local"
+                                value={scheduleDate}
+                                onChange={(e) => setScheduleDate(e.target.value)}
+                                className="h-11 bg-neutral-950/50 border-neutral-800 focus-visible:ring-neutral-600 text-white [color-scheme:dark]"
+                            />
+                            <p className="text-xs text-neutral-500">
+                                This item will be automatically released on this date, regardless of check-in status.
+                            </p>
+                        </div>
+
+                        {scheduleItem?.scheduledReleaseDate && (
+                            <div className="flex items-center gap-2 text-xs text-purple-400 bg-purple-950/20 border border-purple-900/30 px-3 py-2 rounded-lg">
+                                <CalendarClock className="w-3.5 h-3.5" />
+                                Currently set to: {new Date(scheduleItem.scheduledReleaseDate).toLocaleString(undefined, {
+                                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                                })}
+                            </div>
+                        )}
+
+                        <div className="flex gap-3 pt-2">
+                            {scheduleItem?.scheduledReleaseDate && (
+                                <Button
+                                    variant="ghost"
+                                    onClick={handleScheduleClear}
+                                    disabled={isPending}
+                                    className="text-neutral-400 hover:text-red-400"
+                                >
+                                    Remove
+                                </Button>
+                            )}
+                            <Button
+                                onClick={handleScheduleSave}
+                                disabled={isPending || !scheduleDate}
+                                className="flex-1 h-11 bg-white text-black hover:bg-neutral-200 font-semibold rounded-full"
+                            >
+                                {isPending ? "Saving..." : (
+                                    <><CheckCircle2 className="w-4 h-4 mr-2" /> Save Schedule</>
+                                )}
+                            </Button>
+                        </div>
                     </div>
                 </DialogContent>
             </Dialog>

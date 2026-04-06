@@ -44,8 +44,9 @@ model VaultItem {
   encryptedContent String
   recipientEmail   String?
   folderId         String?
-  storageProvider  String             @default("DATABASE")
-  createdAt        DateTime           @default(now())
+  storageProvider      String             @default("DATABASE")
+  scheduledReleaseDate DateTime?
+  createdAt            DateTime           @default(now())
   files            File[]
   Recipient        Recipient[]
   releaseTokens    ReleaseToken[]
@@ -94,7 +95,7 @@ model ReleaseToken {
 }
 
 model AuditLog {
-  id         String   @id
+  id         String   @id @default(cuid())
   userId     String?
   action     String
   entityId   String?
@@ -106,15 +107,15 @@ model AuditLog {
 }
 
 model Contact {
-  id             String             @id
-  userId         String
-  name           String
-  email          String
-  phone          String?
-  isTrusted      Boolean            @default(false)
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime
-  User           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String             @id @default(cuid())
+  userId           String
+  name             String
+  email            String
+  phone            String?
+  isTrusted        Boolean            @default(false)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  User             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   VaultItemContact VaultItemContact[]
 }
 
@@ -131,16 +132,16 @@ model VaultItemContact {
 }
 
 model CoverLetter {
-  id               String   @id
+  id               String   @id @default(cuid())
   userId           String   @unique
   encryptedContent String
   createdAt        DateTime @default(now())
-  updatedAt        DateTime
+  updatedAt        DateTime @updatedAt
   User             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Folder {
-  id        String      @id
+  id        String      @id @default(cuid())
   userId    String
   name      String
   color     String?     @default("neutral")
@@ -150,7 +151,7 @@ model Folder {
 }
 
 model Recipient {
-  id          String    @id
+  id          String    @id @default(cuid())
   email       String
   vaultItemId String
   VaultItem   VaultItem @relation(fields: [vaultItemId], references: [id], onDelete: Cascade)

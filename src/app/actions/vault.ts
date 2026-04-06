@@ -97,6 +97,9 @@ export async function addVaultItem(formData: FormData) {
 
     const emails = recipientEmail.split(",").map((e: string) => e.trim()).filter(Boolean);
 
+    const scheduledReleaseStr = formData.get("scheduledRelease") as string
+    const scheduledReleaseDate = scheduledReleaseStr ? new Date(scheduledReleaseStr) : null
+
     const newItem = await prisma.vaultItem.create({
         data: {
             userId: session.user.id,
@@ -105,8 +108,9 @@ export async function addVaultItem(formData: FormData) {
             itemType,
             encryptedContent: storedData,
             storageProvider,
+            scheduledReleaseDate,
             Recipient: {
-                create: emails.map((email: string) => ({ email }))
+                create: emails.map(email => ({ email }))
             }
         }
     })
