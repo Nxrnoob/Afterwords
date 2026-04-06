@@ -72,7 +72,7 @@ export function AddItemSheet() {
                             </p>
                             
                             <div className="bg-neutral-900/60 rounded-3xl border border-neutral-800 p-1">
-                                <AddItemClientWrapper />
+                                <AddItemClientWrapper onSuccess={handleClose} />
                             </div>
                         </div>
                     </motion.div>
