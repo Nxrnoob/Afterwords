@@ -34,20 +34,43 @@ export default async function RecipientAccessPage({
         })
     }
 
-    // 3. Decrypt payload
-    const isClientEncrypted = releaseToken.vaultItem.encryptedContent.startsWith("CLIENT_ENCRYPTED:")
+    // 3. Resolve actual content (fetch from IPFS if needed)
+    let rawContent = releaseToken.vaultItem.encryptedContent
+    if (releaseToken.vaultItem.storageProvider === "IPFS" && rawContent.startsWith("ipfs://")) {
+        const cid = rawContent.replace("ipfs://", "")
+        const gateways = [
+            `https://gateway.pinata.cloud/ipfs/${cid}`,
+            `https://cloudflare-ipfs.com/ipfs/${cid}`,
+            `https://ipfs.io/ipfs/${cid}`
+        ]
+        for (const gw of gateways) {
+            try {
+                const res = await fetch(gw)
+                if (res.ok) {
+                    rawContent = await res.text()
+                    break
+                }
+            } catch {
+                // try next gateway
+            }
+        }
+    }
+
+    // 4. Decrypt payload
+    const isClientEncrypted = rawContent.startsWith("CLIENT_ENCRYPTED:")
     let decryptedContent = "Error decrypting content."
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let structuredData: any = null
 
     if (!isClientEncrypted) {
         try {
-            decryptedContent = decryptString(releaseToken.vaultItem.encryptedContent)
+            decryptedContent = decryptString(rawContent)
             if (releaseToken.vaultItem.itemType === "credential" || releaseToken.vaultItem.itemType === "file") {
                 structuredData = JSON.parse(decryptedContent)
             }
         } catch (e) {
             console.error("Failed to decrypt recipient payload", e)
+            decryptedContent = "Decryption failed. The vault owner's encryption key may have changed, or the data is corrupted."
         }
     }
 
@@ -85,7 +108,7 @@ export default async function RecipientAccessPage({
                     </CardHeader>
                     <CardContent className="pt-6">
                         {isClientEncrypted ? (
-                            <RecipientDecrypter ciphertext={releaseToken.vaultItem.encryptedContent} itemType={releaseToken.vaultItem.itemType} />
+                            <RecipientDecrypter ciphertext={rawContent} itemType={releaseToken.vaultItem.itemType} />
                         ) : releaseToken.vaultItem.itemType === "credential" && structuredData ? (
                             <div className="space-y-4">
                                 <div className="p-4 bg-neutral-950/50 border border-neutral-800 rounded-lg space-y-3">
